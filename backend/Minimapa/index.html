@@ -15,55 +15,111 @@
     .field{margin-top:8px;font-size:14px}
     .muted{color:#546e81;font-size:13px}
     button{margin-top:10px;padding:8px 10px;border-radius:8px;border:0;background:#4facfe;color:#04233a;font-weight:700;cursor:pointer}
-  </style>
-</head>
-<body>
-  <div class="topbar">
-    <div><strong>ClimaApp</strong> — Minimapa</div>
-    <div class="muted">Abre esto después de iniciar sesión</div>
-  </div>
+  <!doctype html>
+  <html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Selecciona tu ubicación — ClimaApp</title>
+    <style>
+      /* Adapted styles from src/components/LocationSelector.css for the static minimapa page */
+      :root{--bg:#f6fbff;--panel:#ffffff;--primary:#4facfe;--muted:#546e81;--text:#05223a}
+      html,body{height:100%;margin:0;font-family:Segoe UI, Roboto, Arial, sans-serif;background:var(--bg);color:var(--text)}
+      .topbar{padding:12px 16px;background:linear-gradient(90deg,var(--primary),#00f2fe);color:rgba(0,34,52,0.9);display:flex;align-items:center;justify-content:space-between}
+      .step-container{padding:14px}
+      .step-header{margin-bottom:12px}
+      .step-title{margin:0;font-size:1.25rem}
+      .step-subtitle{margin:4px 0 0 0;color:var(--muted);font-size:0.95rem}
 
-  <div class="container">
-    <div id="map">Cargando mapa…</div>
-    <div class="panel">
-      <h3>Ubicación</h3>
-      <div id="status" class="muted">Solicitando permiso de ubicación al navegador…</div>
-    <div class="field"><strong>Coordenadas:</strong> <span id="coords">—</span></div>
-    <div class="field"><strong>Ciudad / Lugar:</strong> <span id="city">—</span></div>
-    <div class="field"><strong>Fuente:</strong> <span id="source">—</span></div>
-    <div class="field"><strong>Precisión (m):</strong> <span id="accuracy">—</span></div>
-        <!-- 'Ver ubicación' button removed: automatic location tracking enabled -->
+      .location-selector{display:flex;gap:16px;align-items:flex-start}
+      .search-section{display:flex;flex-direction:column;gap:12px;min-width:320px}
+      .search-bar{display:flex;align-items:center;background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:6px 8px}
+      .search-input{flex:1;border:0;padding:8px;font-size:1rem}
+      .search-input:focus{outline:none}
+      .btn{padding:8px 12px;border-radius:8px;border:0;background:var(--primary);color:rgba(0,34,52,0.95);font-weight:700;cursor:pointer}
+      .btn[disabled]{opacity:0.6;cursor:not-allowed}
+      .btn-outline{background:transparent;border:1px solid rgba(0,0,0,0.06);font-weight:600}
 
-        <div style="margin-top:12px">
-          <label for="manualInput" class="muted">Buscar por nombre/lugar (ej: Madrid)</label>
-          <div style="display:flex;gap:8px;margin-top:6px">
-            <input id="manualInput" placeholder="Escribe ciudad o dirección" style="flex:1;padding:8px;border-radius:6px;border:1px solid #e6eef7" />
-            <button id="manualSearch">Buscar</button>
-          </div>
-        </div>
-
-        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
-          <input type="checkbox" id="watchPos" /> <label for="watchPos" class="muted">Seguir ubicación (watchPosition)</label>
-        </div>
-        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
-          <div style="display:flex;flex-direction:column">
-            <button id="retry">Obtener ubicación</button>
-            <small id="retryNote" class="muted" style="margin-top:6px;">Último intento: —</small>
-          </div>
+      .map-panel{flex:1;display:flex;gap:16px}
++    
+      .map-container{flex:1;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);background:#e9f5ff}
+      #map{height:60vh;width:100%}
++
+      .info-panel{width:320px;background:var(--panel);padding:12px;border-radius:8px;box-shadow:0 8px 20px rgba(10,20,40,0.04)}
++
+      .muted{color:var(--muted);font-size:0.95rem}
++    .field{margin-top:8px;font-size:14px}
++
+      .controls-row{display:flex;gap:8px;align-items:center;margin-top:8px}
++
+      @media (max-width:900px){
++      .location-selector{flex-direction:column}
++      .info-panel{width:100%}
++      #map{height:50vh}
++    }
++  </style>
++
+  </head>
++
+  <body>
++
+    <div class="topbar">
++    <div><strong>ClimaApp</strong> — Minimapa</div>
++    <div class="muted">Usa el minimapa para seleccionar tu ubicación</div>
++  </div>
++
++
++
++  <div class="step-container">
++    <div class="step-header">
++      <h1 class="step-title">Selecciona tu ubicación</h1>
++      <p class="step-subtitle">Busca o usa tu ubicación para centrar el mapa.</p>
++    </div>
++
++    <div class="location-selector">
++      <div class="search-section">
++        <div class="search-bar">
++          <!-- icon placeholder -->
++          <input id="manualInput" class="search-input" placeholder="Buscar ciudad, dirección..." />
++          <button id="manualSearch" class="btn">Buscar</button>
++        </div>
++        <div style="display:flex;gap:8px">
++          <button id="useCurrent" class="btn btn-outline" onclick="(function(){ const b=document.getElementById('watchPos'); if(b) b.checked=true; document.getElementById('retry')?.click(); })()">Usar mi ubicación</button>
++          <label style="display:flex;align-items:center;gap:6px;"> <input type="checkbox" id="watchPos" /> <span class="muted">Seguir ubicación</span></label>
++        </div>
++
++        <div class="controls-row">
++          <div style="display:flex;flex-direction:column">
++            <button id="retry" class="btn">Obtener ubicación</button>
++            <small id="retryNote" class="muted" style="margin-top:6px;">Último intento: —</small>
++          </div>
++          <button id="fit5k" class="btn btn-outline">Ajustar a 5 km</button>
++        </div>
++      </div>
++
++      <div class="map-panel">
++        <div class="map-container">
++          <div id="map">Cargando mapa…</div>
++        </div>
++        <div class="info-panel">
++          <h3 style="margin:0 0 8px 0">Ubicación</h3>
++          <div id="status" class="muted">Solicitando permiso de ubicación…</div>
++          <div class="field"><strong>Coordenadas:</strong> <span id="coords">—</span></div>
++          <div class="field"><strong>Ciudad / Lugar:</strong> <span id="city">—</span></div>
++          <div class="field"><strong>Fuente:</strong> <span id="source">—</span></div>
++          <div class="field"><strong>Precisión (m):</strong> <span id="accuracy">—</span></div>
++        </div>
++      </div>
++    </div>
++  </div>
++
++
++  <!-- GOOGLE MAPS API KEY: keep for local testing; restrict or inject in production -->
++  <script>
++    window.GOOGLE_MAPS_API_KEY = 'AIzaSyB6tCg_cNejrRpYu_j907LEvb-eobaKguw';
++  </script>
++  <script src="map.js"></script>
++</body>
++</html>
++
           <button id="fit5k">Ajustar a 5 km</button>
-        </div>
-    </div>
-  </div>
-  
-
-  <!-- Leaflet removed: using Google Maps only -->
-  <!-- GOOGLE MAPS API KEY: injected for local testing. Remove or restrict before publishing. -->
-  <script>
-    // WARNING: This key is present here only for local development/testing as requested.
-    // Do NOT commit a production key to a public repository. Prefer server-side injection
-    // or environment-based configuration with proper restrictions.
-    window.GOOGLE_MAPS_API_KEY = 'AIzaSyB6tCg_cNejrRpYu_j907LEvb-eobaKguw';
-  </script>
-  <script src="map.js"></script>
-</body>
-</html>
