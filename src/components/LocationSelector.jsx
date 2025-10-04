@@ -87,7 +87,15 @@ const LocationSelector = ({ onLocationSelect }) => {
       if(!key){ setStatusText('Google Maps: API key no encontrada. Añádela en window.GOOGLE_MAPS_API_KEY o REACT_APP_GOOGLE_MAPS_API_KEY'); return; }
       await loadGoogleMaps(key);
       if(mapContainerRef.current){
-        mapInstance.current = new window.google.maps.Map(mapContainerRef.current, { center: DEFAULT_CENTER, zoom: 12 });
+        mapInstance.current = new window.google.maps.Map(mapContainerRef.current, { center: DEFAULT_CENTER, zoom: 12,
+          disableDefaultUI: true,
+          zoomControl: true,
+          streetViewControl: false,
+          fullscreenControl: false,
+          mapTypeControl: false,
+          scaleControl: false,
+          clickableIcons: false
+        });
         markerRef.current = new window.google.maps.Marker({ map: mapInstance.current, position: DEFAULT_CENTER });
         circleRef.current = null;
         mapReadyRef.current = true;
@@ -384,7 +392,7 @@ const LocationSelector = ({ onLocationSelect }) => {
           </label>
         </div>
 
-        <div ref={mapContainerRef} className="map-container" style={{flex: 1, minHeight: '320px', height: '400px'}}>
+        <div ref={mapContainerRef} className="map-container" style={{position:'relative', width: '760px', height: '320px', minHeight: '320px'}}>
           {useIframeFallback && (
             <iframe
               title="map-embed"
@@ -392,6 +400,10 @@ const LocationSelector = ({ onLocationSelect }) => {
               style={{border:0,width:'100%',height:'100%'}}
               loading="lazy"
             />
+          )}
+          {useIframeFallback && (
+            // overlay to hide the embedded iframe box (e.g. "Ampliar mapa / Cómo llegar")
+            <div style={{position:'absolute', left:8, top:8, width:160, height:48, background:'rgba(0,0,0,0)', pointerEvents:'auto'}} aria-hidden="true" />
           )}
         </div>
 
