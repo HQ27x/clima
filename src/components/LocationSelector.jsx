@@ -392,7 +392,7 @@ const LocationSelector = ({ onLocationSelect }) => {
           </label>
         </div>
 
-        <div ref={mapContainerRef} className="map-container" style={{position:'relative', width: '760px', height: '320px', minHeight: '320px'}}>
+        <div ref={mapContainerRef} className="map-container" style={{position:'relative', height: '400px', minHeight: '320px'}}>
           {useIframeFallback && (
             <iframe
               title="map-embed"

@@ -12,12 +12,11 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    // Verificar si hay un tema guardado en localStorage
     const savedTheme = localStorage.getItem('clima-app-theme');
     return savedTheme || 'dark';
   });
 
-  // Paletas de colores
+  // Paletas de colores actualizadas
   const colorPalettes = {
     dark: {
       // Colores base
@@ -25,23 +24,26 @@ export const ThemeProvider = ({ children }) => {
       secondary: '#10B981',    // Verde
       background: '#0B1220',   // Azul oscuro
       surface: '#1E293B',      // Azul gris oscuro
-      text: '#FFFFFF',         // Blanco
-      textSecondary: '#9CA3AF', // Gris claro
-      
-      // Colores del clima
-      sunny: '#F59E0B',        // Amarillo sol
+
+      // Texto para modo oscuro (blanco y grises claros)
+      textPrimary: '#FFFFFF',         // Blanco para textos principales
+      textSecondary: '#9CA3AF',       // Gris claro para textos secundarios
+      textTertiary: '#6B7280',        // Gris medio para textos menos importantes
+
+      // Colores del clima (más vibrantes para modo oscuro)
+      sunny: '#FBBF24',        // Amarillo sol más vibrante
       cloudy: '#6B7280',       // Gris nublado
-      rainy: '#2563EB',        // Azul lluvia
+      rainy: '#3B82F6',        // Azul lluvia brillante
       stormy: '#7C3AED',       // Púrpura tormenta
       snowy: '#E5E7EB',        // Blanco nieve
       foggy: '#9CA3AF',        // Gris niebla
-      
+
       // Estados
-      success: '#10B981',      // Verde éxito
-      warning: '#F59E0B',      // Amarillo advertencia
-      error: '#EF4444',        // Rojo error
-      info: '#3B82F6',         // Azul información
-      
+      success: '#10B981',
+      warning: '#F59E0B',
+      error: '#EF4444',
+      info: '#3B82F6',
+
       // Transparencias
       overlay: 'rgba(11, 18, 32, 0.95)',
       card: 'rgba(255, 255, 255, 0.05)',
@@ -50,27 +52,30 @@ export const ThemeProvider = ({ children }) => {
     },
     light: {
       // Colores base
-      primary: '#2563EB',      // Azul (mismo)
-      secondary: '#10B981',    // Verde (mismo)
+      primary: '#2563EB',      // Azul
+      secondary: '#10B981',    // Verde
       background: '#F8FAFC',   // Blanco gris muy claro
       surface: '#FFFFFF',      // Blanco puro
-      text: '#1F2937',         // Gris muy oscuro
-      textSecondary: '#6B7280', // Gris medio
-      
-      // Colores del clima
-      sunny: '#F59E0B',        // Amarillo sol (mismo)
+
+      // Texto para modo claro (grises oscuros y negros suaves)
+      textPrimary: '#1F2937',         // Gris muy oscuro para texto principal
+      textSecondary: '#4B5563',       // Gris oscuro para texto secundario
+      textTertiary: '#6B7280',        // Gris medio
+
+      // Colores del clima (ligeramente más suaves para modo claro)
+      sunny: '#FBBF24',        // Amarillo sol vibrante
       cloudy: '#9CA3AF',       // Gris nublado más claro
-      rainy: '#3B82F6',        // Azul lluvia más claro
-      stormy: '#8B5CF6',       // Púrpura tormenta más claro
+      rainy: '#3B82F6',        // Azul lluvia
+      stormy: '#8B5CF6',       // Púrpura tormenta
       snowy: '#F3F4F6',        // Blanco nieve
-      foggy: '#D1D5DB',        // Gris niebla más claro
-      
+      foggy: '#D1D5DB',        // Gris niebla
+
       // Estados
-      success: '#10B981',      // Verde éxito (mismo)
-      warning: '#F59E0B',      // Amarillo advertencia (mismo)
-      error: '#EF4444',        // Rojo error (mismo)
-      info: '#3B82F6',         // Azul información (mismo)
-      
+      success: '#10B981',
+      warning: '#F59E0B',
+      error: '#EF4444',
+      info: '#3B82F6',
+
       // Transparencias
       overlay: 'rgba(248, 250, 252, 0.95)',
       card: 'rgba(255, 255, 255, 0.8)',
@@ -85,15 +90,37 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('clima-app-theme', newTheme);
   };
 
-  // Aplicar tema al body
   useEffect(() => {
-    // Limpiar clases anteriores
     document.body.classList.remove('theme-dark', 'theme-light');
-    // Aplicar nueva clase
     document.body.classList.add(`theme-${theme}`);
-    // También aplicar data-theme para CSS
     document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+    
+    // Aplicar colores dinámicamente a las variables CSS
+    const colors = colorPalettes[theme];
+    const root = document.documentElement;
+    
+    root.style.setProperty('--primary', colors.primary);
+    root.style.setProperty('--secondary', colors.secondary);
+    root.style.setProperty('--background', colors.background);
+    root.style.setProperty('--surface', colors.surface);
+    root.style.setProperty('--text', colors.textPrimary);
+    root.style.setProperty('--textSecondary', colors.textSecondary);
+    root.style.setProperty('--textTertiary', colors.textTertiary);
+    root.style.setProperty('--sunny', colors.sunny);
+    root.style.setProperty('--cloudy', colors.cloudy);
+    root.style.setProperty('--rainy', colors.rainy);
+    root.style.setProperty('--stormy', colors.stormy);
+    root.style.setProperty('--snowy', colors.snowy);
+    root.style.setProperty('--foggy', colors.foggy);
+    root.style.setProperty('--success', colors.success);
+    root.style.setProperty('--warning', colors.warning);
+    root.style.setProperty('--error', colors.error);
+    root.style.setProperty('--info', colors.info);
+    root.style.setProperty('--overlay', colors.overlay);
+    root.style.setProperty('--card', colors.card);
+    root.style.setProperty('--border', colors.border);
+    root.style.setProperty('--hover', colors.hover);
+  }, [theme, colorPalettes]);
 
   const value = {
     theme,
