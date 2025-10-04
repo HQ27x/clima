@@ -52,7 +52,7 @@ const Login = ({ onLogin }) => {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>Clima App</h1>
+          <h1>Alertify</h1>
           <p>Accede a información meteorológica precisa</p>
         </div>
 
