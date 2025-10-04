@@ -1,10 +1,11 @@
 .navigation {
-  background-color: rgba(11, 18, 32, 0.95);
+  background-color: var(--overlay);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: all 0.3s ease;
 }
 
 .nav-container {
@@ -18,9 +19,10 @@
 }
 
 .nav-logo h2 {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.5rem;
   font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 .nav-steps {
@@ -39,23 +41,26 @@
   text-decoration: none;
   transition: all 0.3s ease;
   min-width: 80px;
+  color: var(--textSecondary);
 }
 
 .nav-step:hover {
-  background-color: rgba(37, 99, 235, 0.1);
+  background-color: var(--hover);
+  color: var(--text);
 }
 
 .nav-step.active {
-  background-color: #2563EB;
-  color: #FFFFFF;
+  background-color: var(--primary);
+  color: var(--text);
 }
 
 .nav-step.completed {
-  color: #10B981;
+  color: var(--secondary);
 }
 
 .nav-step.completed:hover {
-  background-color: rgba(16, 185, 129, 0.1);
+  background-color: var(--hover);
+  color: var(--secondary);
 }
 
 .nav-icon {
@@ -65,6 +70,17 @@
 .nav-label {
   font-size: 0.8rem;
   font-weight: 500;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Asegurar que las variables se apliquen correctamente */
+.navigation * {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Responsive */

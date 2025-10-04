@@ -1,6 +1,7 @@
 .app {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0B1220 0%, #1E293B 100%);
+  background: linear-gradient(135deg, var(--background) 0%, var(--surface) 100%);
+  transition: background 0.3s ease;
 }
 
 .loading-container {
@@ -15,8 +16,8 @@
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(37, 99, 235, 0.3);
-  border-top: 4px solid #2563EB;
+  border: 4px solid var(--border);
+  border-top: 4px solid var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -46,13 +47,13 @@
 .step-title {
   font-size: 2.5rem;
   font-weight: 600;
-  color: #FFFFFF;
+  color: var(--text);
   margin-bottom: 10px;
 }
 
 .step-subtitle {
   font-size: 1.2rem;
-  color: #9CA3AF;
+  color: var(--textSecondary);
   margin-bottom: 20px;
 }
 
@@ -75,29 +76,29 @@
 }
 
 .step-indicator.active {
-  background-color: #2563EB;
-  color: #FFFFFF;
+  background-color: var(--primary);
+  color: var(--text);
 }
 
 .step-indicator.completed {
-  background-color: #10B981;
-  color: #FFFFFF;
+  background-color: var(--secondary);
+  color: var(--text);
 }
 
 .step-indicator.pending {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #9CA3AF;
+  background-color: var(--hover);
+  color: var(--textSecondary);
 }
 
 .step-line {
   width: 40px;
   height: 2px;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--border);
   margin-top: 19px;
 }
 
 .step-line.completed {
-  background-color: #10B981;
+  background-color: var(--secondary);
 }
 
 /* Responsive */

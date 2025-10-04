@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FiMapPin, FiCalendar, FiCloud, FiTarget, FiMessageSquare, FiUsers } from 'react-icons/fi';
+import ThemeToggle from './ThemeToggle';
 import './Navigation.css';
 
 const Navigation = ({ currentStep }) => {
@@ -39,6 +40,10 @@ const Navigation = ({ currentStep }) => {
               </Link>
             );
           })}
+        </div>
+        
+        <div className="nav-actions">
+          <ThemeToggle />
         </div>
       </div>
     </nav>

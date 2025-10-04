@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase/config';
+import { ThemeProvider } from './contexts/ThemeContext';
 import Login from './components/Login';
 import LocationSelector from './components/LocationSelector';
 import Calendar from './components/Calendar';
@@ -10,6 +11,7 @@ import Tracking from './components/Tracking';
 import Feedback from './components/Feedback';
 import Forum from './components/Forum';
 import Navigation from './components/Navigation';
+import ThemeToggle from './components/ThemeToggle';
 import './App.css';
 
 function App() {
@@ -37,75 +39,81 @@ function App() {
   }
 
   if (!user) {
-    return <Login onLogin={() => setUser(true)} />;
+    return (
+      <ThemeProvider>
+        <Login onLogin={() => setUser(true)} />
+      </ThemeProvider>
+    );
   }
 
   return (
-    <Router>
-      <div className="app">
-        <Navigation currentStep={currentStep} />
-        <main className="main-content">
-          <Routes>
-            <Route 
-              path="/" 
-              element={
-                <LocationSelector 
-                  onLocationSelect={(loc) => {
-                    setLocation(loc);
-                    setCurrentStep(2);
-                  }} 
-                />
-              } 
-            />
-            <Route 
-              path="/calendar" 
-              element={
-                <Calendar 
-                  location={location}
-                  onNext={() => setCurrentStep(3)}
-                />
-              } 
-            />
-            <Route 
-              path="/weather" 
-              element={
-                <WeatherInfo 
-                  location={location}
-                  onNext={() => setCurrentStep(4)}
-                />
-              } 
-            />
-            <Route 
-              path="/tracking" 
-              element={
-                <Tracking 
-                  location={location}
-                  onNext={() => setCurrentStep(5)}
-                />
-              } 
-            />
-            <Route 
-              path="/feedback" 
-              element={
-                <Feedback 
-                  location={location}
-                  onNext={() => setCurrentStep(6)}
-                />
-              } 
-            />
-            <Route 
-              path="/forum" 
-              element={<Forum />} 
-            />
-            <Route 
-              path="/login" 
-              element={<Login onLogin={() => setUser(true)} />} 
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <div className="app">
+          <Navigation currentStep={currentStep} />
+          <main className="main-content">
+            <Routes>
+              <Route 
+                path="/" 
+                element={
+                  <LocationSelector 
+                    onLocationSelect={(loc) => {
+                      setLocation(loc);
+                      setCurrentStep(2);
+                    }} 
+                  />
+                } 
+              />
+              <Route 
+                path="/calendar" 
+                element={
+                  <Calendar 
+                    location={location}
+                    onNext={() => setCurrentStep(3)}
+                  />
+                } 
+              />
+              <Route 
+                path="/weather" 
+                element={
+                  <WeatherInfo 
+                    location={location}
+                    onNext={() => setCurrentStep(4)}
+                  />
+                } 
+              />
+              <Route 
+                path="/tracking" 
+                element={
+                  <Tracking 
+                    location={location}
+                    onNext={() => setCurrentStep(5)}
+                  />
+                } 
+              />
+              <Route 
+                path="/feedback" 
+                element={
+                  <Feedback 
+                    location={location}
+                    onNext={() => setCurrentStep(6)}
+                  />
+                } 
+              />
+              <Route 
+                path="/forum" 
+                element={<Forum />} 
+              />
+              <Route 
+                path="/login" 
+                element={<Login onLogin={() => setUser(true)} />} 
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </ThemeProvider>
   );
 }
 

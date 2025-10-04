@@ -1,0 +1,133 @@
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.theme-toggle:hover {
+  background-color: var(--hover);
+}
+
+.toggle-track {
+  position: relative;
+  width: 48px;
+  height: 24px;
+  background-color: var(--border);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.theme-toggle.dark .toggle-track {
+  background-color: var(--primary);
+}
+
+.theme-toggle.light .toggle-track {
+  background-color: var(--textSecondary);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: var(--surface);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.theme-toggle.dark .toggle-thumb {
+  transform: translateX(24px);
+}
+
+.theme-toggle.light .toggle-thumb {
+  transform: translateX(0);
+}
+
+.theme-icon {
+  font-size: 0.8rem;
+  color: var(--text);
+  transition: all 0.3s ease;
+}
+
+.theme-toggle.dark .theme-icon {
+  color: var(--sunny);
+}
+
+.theme-toggle.light .theme-icon {
+  color: var(--text);
+}
+
+.toggle-label {
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+/* Animaciones */
+@keyframes slideIn {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.theme-toggle {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .theme-toggle {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+  
+  .toggle-track {
+    width: 40px;
+    height: 20px;
+  }
+  
+  .toggle-thumb {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .theme-toggle.dark .toggle-thumb {
+    transform: translateX(20px);
+  }
+  
+  .theme-icon {
+    font-size: 0.7rem;
+  }
+  
+  .toggle-label {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .toggle-label {
+    display: none;
+  }
+}
