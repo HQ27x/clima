@@ -11,6 +11,8 @@ const Forum = () => {
   const [loading, setLoading] = useState(false);
   const [userStars, setUserStars] = useState(0);
   const [showNewPost, setShowNewPost] = useState(false);
+  const [likedPosts, setLikedPosts] = useState(new Set());
+  const [starredPosts, setStarredPosts] = useState(new Set());
 
   // Cargar posts del foro
   useEffect(() => {
@@ -36,7 +38,20 @@ const Forum = () => {
           id: doc.id,
           ...doc.data()
         }));
-        setPosts(postsData);
+          // load offline (temporarily saved) posts from localStorage and prepend them
+          try{
+            const raw = localStorage.getItem('forum_offline_posts');
+            if(raw){
+              const offline = JSON.parse(raw);
+              if(Array.isArray(offline) && offline.length){
+                // offline posts should appear first
+                setPosts([...offline, ...postsData]);
+                return;
+              }
+            }
+          }catch(_){ /* ignore parse errors */ }
+
+          setPosts(postsData);
       } catch (error) {
         console.error('Error cargando posts:', error);
       }
@@ -44,6 +59,16 @@ const Forum = () => {
 
     loadPosts();
   }, [selectedLocation]);
+
+  // load liked/starred from localStorage
+  useEffect(()=>{
+    try{
+      const rawLiked = localStorage.getItem('forum_liked_posts');
+      const rawStar = localStorage.getItem('forum_starred_posts');
+      setLikedPosts(new Set(rawLiked ? JSON.parse(rawLiked) : []));
+      setStarredPosts(new Set(rawStar ? JSON.parse(rawStar) : []));
+    }catch(e){ /* ignore */ }
+  }, []);
 
   // Cargar estrellas del usuario (simulado)
   useEffect(() => {
@@ -67,27 +92,52 @@ const Forum = () => {
         timestamp: new Date(),
         userAgent: navigator.userAgent
       };
+      // Optimistic UI: prepend a temporary post while Firebase resolves
+      const tempPost = { id: `temp-${Date.now()}`, ...postData, offline: false };
+      setPosts(prev => [tempPost, ...(prev || [])]);
 
-      await addDoc(collection(db, 'forum_posts'), postData);
-      
-      setNewPost('');
-      setShowNewPost(false);
-      
-      // Recargar posts
-      const q = query(
-        collection(db, 'forum_posts'),
-        orderBy('timestamp', 'desc'),
-        limit(20)
-      );
-      const querySnapshot = await getDocs(q);
-      const postsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setPosts(postsData);
-      
+      try{
+        // wrap the firebase call with a timeout so UI doesn't hang indefinitely
+        await promiseWithTimeout(addDoc(collection(db, 'forum_posts'), postData), 8000);
+        // on success, reload top posts to get real IDs and timestamps
+        const q2 = query(
+          collection(db, 'forum_posts'),
+          orderBy('timestamp', 'desc'),
+          limit(20)
+        );
+        const querySnapshot = await getDocs(q2);
+        const postsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setPosts(postsData);
+        setNewPost('');
+        setShowNewPost(false);
+      }catch(firebaseErr){
+        // If sending to Firebase fails, save locally (temporary) so user doesn't lose content
+        console.error('Firebase error while posting:', firebaseErr);
+        try{
+          const localPost = {
+            id: `local-${Date.now()}`,
+            ...postData,
+            offline: true
+          };
+          // prepend to UI (replace temp)
+          setPosts(prev => [localPost, ...(prev ? prev.filter(p=>p.id !== tempPost.id) : [])]);
+          // persist to localStorage
+          const raw = localStorage.getItem('forum_offline_posts');
+          let arr = [];
+          try{ arr = raw ? JSON.parse(raw) : []; }catch(_){ arr = []; }
+          arr.unshift(localPost);
+          localStorage.setItem('forum_offline_posts', JSON.stringify(arr));
+
+          setNewPost('');
+          setShowNewPost(false);
+          alert('No se pudo publicar en el servidor. Tu post se guardó localmente y aparecerá en la lista.');
+        }catch(err){
+          console.error('Error guardando localmente:', err);
+          alert('Error al enviar post. Inténtalo de nuevo.');
+        }
+      }
     } catch (error) {
-      console.error('Error enviando post:', error);
+      console.error('Error enviando post (outer):', error);
       alert('Error al enviar post. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
@@ -96,22 +146,26 @@ const Forum = () => {
 
   // Dar like a un post
   const handleLike = async (postId) => {
-    // En una app real, esto actualizaría el contador de likes en la base de datos
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
-        ? { ...post, likes: (post.likes || 0) + 1 }
-        : post
-    ));
+    // Allow only one like per user per post (tracked locally)
+    if(!postId) return;
+    if(likedPosts.has(postId)) return; // already liked
+    // update UI
+    setPosts(prev => prev.map(post => post.id === postId ? { ...post, likes: (post.likes || 0) + 1 } : post));
+    const next = new Set(likedPosts);
+    next.add(postId);
+    setLikedPosts(next);
+    try{ localStorage.setItem('forum_liked_posts', JSON.stringify(Array.from(next))); }catch(_){ }
   };
 
   // Dar estrella a un post
   const handleStar = async (postId) => {
-    // En una app real, esto actualizaría el contador de estrellas en la base de datos
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
-        ? { ...post, stars: (post.stars || 0) + 1 }
-        : post
-    ));
+    if(!postId) return;
+    if(starredPosts.has(postId)) return; // already starred
+    setPosts(prev => prev.map(post => post.id === postId ? { ...post, stars: (post.stars || 0) + 1 } : post));
+    const next = new Set(starredPosts);
+    next.add(postId);
+    setStarredPosts(next);
+    try{ localStorage.setItem('forum_starred_posts', JSON.stringify(Array.from(next))); }catch(_){ }
   };
 
   // Obtener nivel de credibilidad basado en estrellas
@@ -123,6 +177,26 @@ const Forum = () => {
   };
 
   const credibility = getCredibilityLevel(userStars);
+
+  function formatTimestamp(ts){
+    // Firebase Timestamp has toDate(), other formats may be Date or number/string
+    try{
+      if(!ts) return '';
+      if(typeof ts === 'object' && typeof ts.toDate === 'function'){
+        return ts.toDate().toLocaleDateString('es-ES');
+      }
+      const d = (typeof ts === 'string' || typeof ts === 'number') ? new Date(ts) : (ts instanceof Date ? ts : null);
+      if(d) return d.toLocaleDateString('es-ES');
+      return '';
+    }catch(e){ return ''; }
+  }
+
+  // utility: wrap a promise and reject if it doesn't resolve within ms
+  function promiseWithTimeout(promise, ms = 8000){
+    let timeoutId;
+    const timeout = new Promise((_, reject) => { timeoutId = setTimeout(()=> reject(new Error('timeout')), ms); });
+    return Promise.race([promise.then((res)=>{ clearTimeout(timeoutId); return res; }), timeout]);
+  }
 
   return (
     <div className="step-container">
@@ -265,7 +339,7 @@ const Forum = () => {
                         </div>
                         <div className="post-date">
                           <FiCalendar className="meta-icon" />
-                          {new Date(post.timestamp?.toDate()).toLocaleDateString('es-ES')}
+                          {formatTimestamp(post.timestamp)}
                         </div>
                       </div>
                     </div>
@@ -319,7 +393,7 @@ const Forum = () => {
           <div className="stat-item">
             <FiMessageCircle className="stat-icon" />
             <div>
-              <div className="stat-number">5,678</div>
+              <div className="stat-number">{posts.length}</div>
               <div className="stat-label">Posts publicados</div>
             </div>
           </div>

@@ -19,7 +19,7 @@ const Navigation = ({ currentStep }) => {
     <nav className="navigation">
       <div className="nav-container">
         <div className="nav-logo">
-          <h2>Alterta Causa</h2>
+          <h2>Alertify</h2>
         </div>
         
         <div className="nav-steps">

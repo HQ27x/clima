@@ -6,9 +6,10 @@
   --surface: #1E293B;
   --text: #FFFFFF;
   --textSecondary: #9CA3AF;
-  --sunny: #F59E0B;
+  --textTertiary: #6B7280;
+  --sunny: #FBBF24;
   --cloudy: #6B7280;
-  --rainy: #2563EB;
+  --rainy: #3B82F6;
   --stormy: #7C3AED;
   --snowy: #E5E7EB;
   --foggy: #9CA3AF;
@@ -27,14 +28,16 @@
   --background: #F8FAFC;
   --surface: #FFFFFF;
   --text: #1F2937;
-  --textSecondary: #6B7280;
+  --textSecondary: #4B5563;
+  --textTertiary: #6B7280;
+  --sunny: #FBBF24;
   --cloudy: #9CA3AF;
   --rainy: #3B82F6;
   --stormy: #8B5CF6;
   --snowy: #F3F4F6;
   --foggy: #D1D5DB;
   --overlay: rgba(248, 250, 252, 0.95);
-  --card: rgba(255, 255, 255, 0.9);
+  --card: rgba(255, 255, 255, 0.8);
   --border: rgba(0, 0, 0, 0.1);
   --hover: rgba(0, 0, 0, 0.05);
 }
