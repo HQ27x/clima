@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prueba Login — ClimaApp</title>
+  <style>
+    body{font-family:Segoe UI,Roboto,Arial;margin:0;background:#f3f7fb;display:flex;align-items:center;justify-content:center;height:100vh}
+    .box{width:360px;background:#fff;padding:22px;border-radius:12px;box-shadow:0 8px 20px rgba(10,20,40,0.08)}
+    h2{margin:0 0 10px 0;font-weight:600}
+    label{display:block;font-size:13px;margin-top:10px}
+    input{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #e6eef7}
+    button{margin-top:14px;width:100%;padding:10px;border-radius:8px;background:#4facfe;color:#04233a;border:none;font-weight:700;cursor:pointer}
+    .msg{margin-top:12px;padding:10px;border-radius:8px;background:#f0f6ff;color:#08325a;font-size:14px}
+    .err{background:#ffe8e8;color:#6a0b0b}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Login de prueba</h2>
+    <form id="form">
+      <label for="user">Usuario (email)</label>
+      <input id="user" name="user" type="text" placeholder="user@example.com" required />
+      <label for="pass">Contraseña</label>
+      <input id="pass" name="pass" type="password" placeholder="password" required />
+      <button type="submit">Iniciar sesión</button>
+    </form>
+    <div id="result" class="msg" style="display:none"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const result = document.getElementById('result');
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      result.style.display='none';
+      const user = form.user.value.trim();
+      const pass = form.pass.value;
+
+      // Simulate login locally for now (no network).
+      // Accepts: user === 'admin' and pass === 'admin'
+      if(user === 'admin' && pass === 'admin'){
+        const fakeToken = btoa(`${user}:${Date.now()}`);
+        result.className = 'msg';
+        result.textContent = `OK (simulado): Bienvenido ${user}. Redirigiendo al minimapa...`;
+        result.style.display = 'block';
+        try{ localStorage.setItem('clima_token', fakeToken); }catch(e){}
+        // small delay so user sees the message, then redirect to Minimapa
+        setTimeout(()=>{ window.location.href = '../Minimapa/index.html'; }, 700);
+        return;
+      }
+
+      result.className = 'msg err';
+      result.textContent = 'Credenciales inválidas (modo offline). Usa admin / admin para pruebas.';
+      result.style.display = 'block';
+    });
+
+    /*
+    // Fetch-based handler (kept commented for re-enable later)
+    // form.addEventListener('submit', async (e)=>{ ...fetch logic... });
+    */
+  </script>
+</body>
+</html>
