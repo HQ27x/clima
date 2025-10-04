@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario de Eventos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Calendario de Eventos</h1>
+
+    <div id="notification-container"></div>
+
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <button id="prev-month-btn">&lt;</button>
+            <h2 id="month-year-str"></h2>
+            <button id="next-month-btn">&gt;</button>
+        </div>
+        <div class="calendar-grid">
+            <div class="day-name">Dom</div>
+            <div class="day-name">Lun</div>
+            <div class="day-name">Mar</div>
+            <div class="day-name">Mié</div>
+            <div class="day-name">Jue</div>
+            <div class="day-name">Vie</div>
+            <div class="day-name">Sáb</div>
+        </div>
+        <div id="calendar-days" class="calendar-grid"></div>
+    </div>
+
+    <!-- Modal para Añadir Evento -->
+    <div id="add-event-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>Añadir Recordatorio</h3>
+            <p id="event-date"></p>
+            <input type="text" id="event-title-input" placeholder="Título del evento...">
+            <button id="save-event-btn">Guardar</button>
+            <button id="delete-event-btn" class="hidden">Eliminar</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
