@@ -5,7 +5,9 @@ import './LocationSelector.css';
 const DEFAULT_CENTER = { lat: 19.4326, lng: -99.1332 };
 
 const LocationSelector = ({ onLocationSelect }) => {
-  const mapRef = useRef(null);
+  const mapContainerRef = useRef(null);
+  const pendingRef = useRef(null);
+  const resizeObserverRef = useRef(null);
   const mapInstance = useRef(null);
   const markerRef = useRef(null);
   const circleRef = useRef(null);
@@ -22,6 +24,7 @@ const LocationSelector = ({ onLocationSelect }) => {
   const [accuracyText, setAccuracyText] = useState('—');
   const [sourceText, setSourceText] = useState('—');
   const [userLocation, setUserLocation] = useState(null);
+  const [useIframeFallback, setUseIframeFallback] = useState(false);
 
   function getCurrentPositionAsync(options = {}){
     return new Promise((resolve, reject)=>{
@@ -83,8 +86,8 @@ const LocationSelector = ({ onLocationSelect }) => {
       const key = window.GOOGLE_MAPS_API_KEY || process.env.REACT_APP_GOOGLE_MAPS_API_KEY || null;
       if(!key){ setStatusText('Google Maps: API key no encontrada. Añádela en window.GOOGLE_MAPS_API_KEY o REACT_APP_GOOGLE_MAPS_API_KEY'); return; }
       await loadGoogleMaps(key);
-      if(mapRef.current){
-        mapInstance.current = new window.google.maps.Map(mapRef.current, { center: DEFAULT_CENTER, zoom: 12 });
+      if(mapContainerRef.current){
+        mapInstance.current = new window.google.maps.Map(mapContainerRef.current, { center: DEFAULT_CENTER, zoom: 12 });
         markerRef.current = new window.google.maps.Marker({ map: mapInstance.current, position: DEFAULT_CENTER });
         circleRef.current = null;
         mapReadyRef.current = true;
@@ -103,7 +106,7 @@ const LocationSelector = ({ onLocationSelect }) => {
         });
         listenersRef.current.push(clickListener);
 
-        // restore stored location (if any) after map is ready
+  // restore stored location (if any) after map is ready
         try{
           const raw = localStorage.getItem('clima_last_location_v1');
           if(raw){
@@ -133,16 +136,45 @@ const LocationSelector = ({ onLocationSelect }) => {
             }
           }catch(e){/* ignore */}
         }, 200);
+
+        // apply any pending marker update that happened before map was ready
+        if(pendingRef.current){
+          const { lat, lng, acc } = pendingRef.current;
+          pendingRef.current = null;
+          try{ updateMapMarker(lat, lng, acc); }catch(_){ }
+        }
+
+        // install a ResizeObserver so when the container becomes visible or resizes we trigger a resize on the map
+        try{
+          if(window.ResizeObserver && mapContainerRef.current){
+            resizeObserverRef.current = new ResizeObserver(()=>{
+              try{
+                if(window.google && window.google.maps && mapInstance.current){
+                  window.google.maps.event.trigger(mapInstance.current, 'resize');
+                  // keep center on marker if present
+                  if(markerRef.current && markerRef.current.getPosition){
+                    const p = markerRef.current.getPosition();
+                    mapInstance.current.setCenter(p);
+                  }
+                }
+              }catch(_){ }
+            });
+            resizeObserverRef.current.observe(mapContainerRef.current);
+          }
+        }catch(_){ }
       }
     }catch(e){
       console.error('Failed to init Google Maps', e);
-      setStatusText('No se pudo inicializar Google Maps. Revisa la consola.');
+      setStatusText('No se pudo inicializar Google Maps. Revisa la consola. Usando fallback embebido.');
+      setUseIframeFallback(true);
     }
   }
 
   function updateMapMarker(lat, lng, acc){
     const latLng = { lat, lng };
     try{
+      // If the map isn't ready yet, store the requested marker and apply it when the map initializes
+      if(!mapInstance.current){ pendingRef.current = { lat, lng, acc }; return; }
       if(markerRef.current){ markerRef.current.setPosition(latLng); }
       if(!markerRef.current && mapInstance.current){ markerRef.current = new window.google.maps.Marker({ map: mapInstance.current, position: latLng }); }
       if(acc && mapInstance.current){
@@ -155,6 +187,12 @@ const LocationSelector = ({ onLocationSelect }) => {
       }
       try{ mapInstance.current && mapInstance.current.setCenter(latLng); }catch(e){}
     }catch(e){ console.warn('Google Maps update failed', e); }
+  }
+
+  function buildEmbedUrl(lat, lng, zoom = 12){
+    // Use the simple google maps embed query (no API key required)
+    // This generates an embeddable map centered on the coords.
+    return `https://www.google.com/maps?q=${lat},${lng}&z=${zoom}&output=embed`;
   }
 
   async function onLocationSuccess(position, source = 'gps', displayMin = 0){
@@ -346,8 +384,15 @@ const LocationSelector = ({ onLocationSelect }) => {
           </label>
         </div>
 
-        <div className="map-container" style={{flex: 1}}>
-          <div ref={mapRef} id="map" className="map" style={{height: '400px', width: '100%'}}></div>
+        <div ref={mapContainerRef} className="map-container" style={{flex: 1, minHeight: '320px', height: '400px'}}>
+          {useIframeFallback && (
+            <iframe
+              title="map-embed"
+              src={buildEmbedUrl(selectedLocation ? selectedLocation.lat : DEFAULT_CENTER.lat, selectedLocation ? selectedLocation.lng : DEFAULT_CENTER.lng)}
+              style={{border:0,width:'100%',height:'100%'}}
+              loading="lazy"
+            />
+          )}
         </div>
 
         <div className="location-info">
