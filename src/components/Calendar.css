@@ -1,0 +1,329 @@
+.calendar-section {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.calendar-container {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.calendar-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #FFFFFF;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.header-icon {
+  color: #2563EB;
+  font-size: 1.2rem;
+}
+
+.add-reminder-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+}
+
+.btn-icon {
+  font-size: 0.9rem;
+}
+
+/* Estilos para react-calendar */
+.react-calendar {
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: 'Inter', sans-serif;
+}
+
+.react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.react-calendar__navigation button {
+  background: none;
+  border: none;
+  color: #FFFFFF;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.react-calendar__navigation button:hover {
+  background-color: rgba(37, 99, 235, 0.2);
+}
+
+.react-calendar__month-view__weekdays {
+  margin-bottom: 10px;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  color: #9CA3AF;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.react-calendar__tile {
+  background: none;
+  border: none;
+  color: #FFFFFF;
+  padding: 12px 8px;
+  margin: 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.react-calendar__tile:hover {
+  background-color: rgba(37, 99, 235, 0.2);
+}
+
+.react-calendar__tile--active {
+  background-color: #2563EB;
+  color: #FFFFFF;
+}
+
+.react-calendar__tile--now {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+}
+
+.calendar-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  color: #10B981;
+  font-size: 0.8rem;
+}
+
+.add-reminder-form {
+  margin-top: 24px;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.add-reminder-form h4 {
+  color: #FFFFFF;
+  margin-bottom: 16px;
+  font-size: 1.1rem;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  color: #FFFFFF;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.selected-date {
+  color: #10B981;
+  font-weight: 600;
+  background-color: rgba(16, 185, 129, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.reminders-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.upcoming-reminders,
+.selected-date-reminders {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.upcoming-reminders h3,
+.selected-date-reminders h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #FFFFFF;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.reminders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reminder-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.reminder-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.reminder-item.completed {
+  opacity: 0.6;
+}
+
+.reminder-content {
+  flex: 1;
+}
+
+.reminder-date {
+  color: #10B981;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.reminder-text {
+  color: #FFFFFF;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.reminder-location {
+  color: #9CA3AF;
+  font-size: 0.8rem;
+}
+
+.reminder-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 12px;
+}
+
+.toggle-btn,
+.remove-btn {
+  background: none;
+  border: none;
+  color: #9CA3AF;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.toggle-btn:hover {
+  color: #10B981;
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.toggle-btn.completed {
+  color: #10B981;
+}
+
+.remove-btn:hover {
+  color: #EF4444;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.no-reminders {
+  color: #9CA3AF;
+  text-align: center;
+  font-style: italic;
+  padding: 20px;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.next-btn {
+  padding: 16px 32px;
+  font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .calendar-section {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .reminders-sidebar {
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-container,
+  .upcoming-reminders,
+  .selected-date-reminders {
+    padding: 16px;
+  }
+  
+  .calendar-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .add-reminder-btn {
+    justify-content: center;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .reminder-item {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .reminder-actions {
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+}

@@ -1,0 +1,127 @@
+.app {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0B1220 0%, #1E293B 100%);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 20px;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(37, 99, 235, 0.3);
+  border-top: 4px solid #2563EB;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.main-content {
+  padding: 20px 0;
+  min-height: calc(100vh - 80px);
+}
+
+/* Estilos para el flujo de pasos */
+.step-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.step-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.step-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 10px;
+}
+
+.step-subtitle {
+  font-size: 1.2rem;
+  color: #9CA3AF;
+  margin-bottom: 20px;
+}
+
+.step-progress {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.step-indicator {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.step-indicator.active {
+  background-color: #2563EB;
+  color: #FFFFFF;
+}
+
+.step-indicator.completed {
+  background-color: #10B981;
+  color: #FFFFFF;
+}
+
+.step-indicator.pending {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #9CA3AF;
+}
+
+.step-line {
+  width: 40px;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin-top: 19px;
+}
+
+.step-line.completed {
+  background-color: #10B981;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .step-title {
+    font-size: 2rem;
+  }
+  
+  .step-subtitle {
+    font-size: 1rem;
+  }
+  
+  .step-progress {
+    gap: 10px;
+  }
+  
+  .step-indicator {
+    width: 30px;
+    height: 30px;
+    font-size: 0.9rem;
+  }
+  
+  .step-line {
+    width: 20px;
+    margin-top: 14px;
+  }
+}
