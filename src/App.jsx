@@ -7,7 +7,6 @@ import Login from './components/Login';
 import LocationSelector from './components/LocationSelector';
 import Calendar from './components/Calendar';
 import WeatherInfo from './components/WeatherInfo';
-import Tracking from './components/Tracking';
 import Feedback from './components/Feedback';
 import Forum from './components/Forum';
 import Navigation from './components/Navigation';
@@ -83,20 +82,11 @@ function App() {
                 } 
               />
               <Route 
-                path="/tracking" 
-                element={
-                  <Tracking 
-                    location={location}
-                    onNext={() => setCurrentStep(5)}
-                  />
-                } 
-              />
-              <Route 
                 path="/feedback" 
                 element={
                   <Feedback 
                     location={location}
-                    onNext={() => setCurrentStep(6)}
+                    onNext={() => setCurrentStep(5)}
                   />
                 } 
               />

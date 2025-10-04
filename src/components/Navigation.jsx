@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiMapPin, FiCalendar, FiCloud, FiTarget, FiMessageSquare, FiUsers } from 'react-icons/fi';
+import { FiMapPin, FiCalendar, FiCloud, FiMessageSquare, FiUsers } from 'react-icons/fi';
 import ThemeToggle from './ThemeToggle';
 import './Navigation.css';
 
@@ -11,9 +11,8 @@ const Navigation = ({ currentStep }) => {
     { path: '/', icon: FiMapPin, label: 'Ubicación', step: 1 },
     { path: '/calendar', icon: FiCalendar, label: 'Calendario', step: 2 },
     { path: '/weather', icon: FiCloud, label: 'Clima', step: 3 },
-    { path: '/tracking', icon: FiTarget, label: 'Seguimiento', step: 4 },
-    { path: '/feedback', icon: FiMessageSquare, label: 'Feedback', step: 5 },
-    { path: '/forum', icon: FiUsers, label: 'Foro', step: 6 }
+    { path: '/feedback', icon: FiMessageSquare, label: 'Feedback', step: 4 },
+    { path: '/forum', icon: FiUsers, label: 'Foro', step: 5 }
   ];
 
   return (

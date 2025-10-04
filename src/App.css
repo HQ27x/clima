@@ -34,7 +34,7 @@
 
 /* Estilos para el flujo de pasos */
 .step-container {
-  max-width: 800px;
+  max-width: 95%;
   margin: 0 auto;
   padding: 0 20px;
 }
