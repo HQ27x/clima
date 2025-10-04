@@ -1,7 +1,8 @@
 .feedback-content {
   display: grid;
-  grid-template-columns: 1fr 400px;
+  grid-template-columns: 420px 1fr;
   gap: 32px;
+  align-items: start;
 }
 
 .feedback-form-section {
@@ -199,9 +200,9 @@
 .recent-feedback-section {
   background-color: rgba(255, 255, 255, 0.05);
   border-radius: 16px;
-  padding: 24px;
+  padding: 32px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  height: fit-content;
+  min-height: 600px;
 }
 
 .recent-feedback-section h3 {
@@ -209,22 +210,29 @@
   align-items: center;
   gap: 8px;
   color: #FFFFFF;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: 600;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .feedback-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
 
 .feedback-item {
   background-color: rgba(255, 255, 255, 0.03);
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.feedback-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .feedback-header {
@@ -346,7 +354,11 @@
   }
   
   .recent-feedback-section {
-    order: -1;
+    min-height: auto;
+  }
+  
+  .feedback-list {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   }
 }
 

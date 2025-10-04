@@ -19,7 +19,7 @@ const Feedback = ({ location, onNext }) => {
         const q = query(
           collection(db, 'feedback'),
           orderBy('timestamp', 'desc'),
-          limit(5)
+          limit(12)
         );
         const querySnapshot = await getDocs(q);
         const feedbackData = querySnapshot.docs.map(doc => ({
@@ -66,7 +66,7 @@ const Feedback = ({ location, onNext }) => {
       const q = query(
         collection(db, 'feedback'),
         orderBy('timestamp', 'desc'),
-        limit(5)
+        limit(12)
       );
       const querySnapshot = await getDocs(q);
       const recentFeedbackData = querySnapshot.docs.map(doc => ({
