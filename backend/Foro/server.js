@@ -11,6 +11,7 @@ app.use(express.json());
 const DATA_DIR = path.join(__dirname, 'data');
 const POSTS_FILE = path.join(DATA_DIR, 'posts.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const FEEDBACKS_FILE = path.join(DATA_DIR, 'feedbacks.json');
 
 function readJson(file){
   try{ return JSON.parse(fs.readFileSync(file,'utf8')); }catch(e){ return null; }
@@ -109,3 +110,20 @@ function computeCredibility(user){
 
 const PORT = process.env.PORT || 4002;
 app.listen(PORT, ()=> console.log('Foro backend listening on', PORT));
+
+// Feedback endpoints
+app.get('/feedbacks', (req, res) => {
+  const fb = readJson(FEEDBACKS_FILE) || { feedbacks: [] };
+  // return latest 20 feedbacks
+  res.json((fb.feedbacks || []).slice(0, 20));
+});
+
+app.post('/feedbacks', (req, res) => {
+  const { rating, positive, comment, location } = req.body || {};
+  if(typeof rating !== 'number' || rating < 0) return res.status(400).json({ error: 'rating numeric required' });
+  const fb = readJson(FEEDBACKS_FILE) || { feedbacks: [] };
+  const item = { id: uuidv4(), rating, positive: !!positive, comment: comment || '', location: location || null, createdAt: Date.now() };
+  fb.feedbacks.unshift(item);
+  writeJson(FEEDBACKS_FILE, fb);
+  res.json(item);
+});

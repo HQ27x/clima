@@ -177,6 +177,21 @@ const Forum = () => {
   };
 
   const credibility = getCredibilityLevel(userStars);
+  const [feedbacks, setFeedbacks] = useState([]);
+
+  // load recent feedbacks from backend Foro (if running)
+  useEffect(()=>{
+    const load = async ()=>{
+      try{
+        const res = await fetch('http://localhost:4002/feedbacks');
+        if(res.ok){
+          const arr = await res.json();
+          setFeedbacks(arr || []);
+        }
+      }catch(e){ /* ignore if backend not running */ }
+    };
+    load();
+  }, []);
 
   function formatTimestamp(ts){
     // Firebase Timestamp has toDate(), other formats may be Date or number/string
@@ -377,6 +392,33 @@ const Forum = () => {
               <FiMessageCircle className="no-posts-icon" />
               <p>No hay posts disponibles</p>
               <p>¡Sé el primero en compartir algo!</p>
+            </div>
+          )}
+        </div>
+        {/* Feedback recientes */}
+        <div className="feedback-section">
+          <h3>
+            <FiMessageCircle className="section-icon" />
+            Feedback recientes
+          </h3>
+          {feedbacks && feedbacks.length > 0 ? (
+            <div className="feedback-list">
+              {feedbacks.map(f=> (
+                <div key={f.id} className="feedback-item">
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <div>
+                      <strong>Calificación:</strong> {f.rating} / 5
+                      <span style={{marginLeft:12,color: f.positive ? '#10B981' : '#EF4444'}}>{f.positive ? 'Positivo' : 'Negativo'}</span>
+                    </div>
+                    <div style={{color:'#9CA3AF'}}>{f.location || '—'}</div>
+                  </div>
+                  <div style={{marginTop:8}}>{f.comment}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-feedback">
+              <p>No hay feedback reciente</p>
             </div>
           )}
         </div>
