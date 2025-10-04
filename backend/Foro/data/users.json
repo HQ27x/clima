@@ -1,0 +1,10 @@
+{
+  "users": [
+    {
+      "id": "u-1",
+      "username": "admin",
+      "displayName": "Administrador",
+      "stars": 5
+    }
+  ]
+}
