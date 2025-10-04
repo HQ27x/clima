@@ -16,71 +16,75 @@ export const ThemeProvider = ({ children }) => {
     return savedTheme || 'dark';
   });
 
-  // Paletas de colores actualizadas
+  // Paletas de colores vintage actualizadas
   const colorPalettes = {
     dark: {
-      // Colores base
-      primary: '#2563EB',      // Azul
-      secondary: '#10B981',    // Verde
-      background: '#0B1220',   // Azul oscuro
-      surface: '#1E293B',      // Azul gris oscuro
+      // Colores base azul vintage
+      primary: '#4A90E2',      // Azul vintage
+      secondary: '#7BB3F0',    // Azul claro vintage
+      accent: '#B8D4F0',       // Azul muy claro vintage
+      background: '#0F1419',   // Azul muy oscuro vintage
+      surface: '#1A2332',      // Azul gris oscuro vintage
 
-      // Texto para modo oscuro (blanco y grises claros)
-      textPrimary: '#FFFFFF',         // Blanco para textos principales
-      textSecondary: '#9CA3AF',       // Gris claro para textos secundarios
-      textTertiary: '#6B7280',        // Gris medio para textos menos importantes
+      // Texto para modo oscuro (azul claro y tonos fríos)
+      textPrimary: '#E8F4FD',         // Azul muy claro para textos principales
+      textSecondary: '#B8D4F0',       // Azul claro para textos secundarios
+      textTertiary: '#8BB3D9',        // Azul medio para textos menos importantes
 
-      // Colores del clima (más vibrantes para modo oscuro)
-      sunny: '#FBBF24',        // Amarillo sol más vibrante
-      cloudy: '#6B7280',       // Gris nublado
-      rainy: '#3B82F6',        // Azul lluvia brillante
-      stormy: '#7C3AED',       // Púrpura tormenta
-      snowy: '#E5E7EB',        // Blanco nieve
-      foggy: '#9CA3AF',        // Gris niebla
+      // Colores del clima vintage
+      sunny: '#FFD700',        // Dorado para sol
+      cloudy: '#B0C4DE',       // Azul gris claro para nubes
+      rainy: '#4682B4',        // Azul acero para lluvia
+      stormy: '#6A5ACD',       // Púrpura lavanda para tormentas
+      snowy: '#F0F8FF',        // Azul blanco para nieve
+      foggy: '#C0C0C0',        // Gris plata para niebla
 
-      // Estados
-      success: '#10B981',
-      warning: '#F59E0B',
-      error: '#EF4444',
-      info: '#3B82F6',
+      // Estados vintage
+      success: '#90EE90',      // Verde claro
+      warning: '#FFB347',      // Naranja suave
+      error: '#FF6B6B',        // Rojo coral
+      info: '#87CEEB',         // Azul cielo
 
       // Transparencias
-      overlay: 'rgba(11, 18, 32, 0.95)',
-      card: 'rgba(255, 255, 255, 0.05)',
-      border: 'rgba(255, 255, 255, 0.1)',
-      hover: 'rgba(255, 255, 255, 0.1)'
+      overlay: 'rgba(15, 20, 25, 0.95)',
+      card: 'rgba(232, 244, 253, 0.08)',
+      border: 'rgba(232, 244, 253, 0.15)',
+      hover: 'rgba(232, 244, 253, 0.12)',
+      buttonText: '#FFFFFF'     // Texto blanco para botones
     },
     light: {
-      // Colores base
-      primary: '#2563EB',      // Azul
-      secondary: '#10B981',    // Verde
-      background: '#F8FAFC',   // Blanco gris muy claro
-      surface: '#FFFFFF',      // Blanco puro
+      // Colores base vintage
+      primary: '#8B5A3C',      // Marrón vintage
+      secondary: '#A67C52',    // Marrón dorado
+      accent: '#D4AF37',       // Dorado vintage
+      background: '#FDF5E6',   // Beige muy claro vintage
+      surface: '#FFF8DC',      // Beige crema
 
-      // Texto para modo claro (grises oscuros y negros suaves)
-      textPrimary: '#1F2937',         // Gris muy oscuro para texto principal
-      textSecondary: '#4B5563',       // Gris oscuro para texto secundario
-      textTertiary: '#6B7280',        // Gris medio
+      // Texto para modo claro (marrón y grises oscuros)
+      textPrimary: '#2F2F2F',         // Gris muy oscuro para texto principal
+      textSecondary: '#5D4E37',       // Marrón oscuro para texto secundario
+      textTertiary: '#8B7355',        // Marrón medio
 
-      // Colores del clima (ligeramente más suaves para modo claro)
-      sunny: '#FBBF24',        // Amarillo sol vibrante
-      cloudy: '#9CA3AF',       // Gris nublado más claro
-      rainy: '#3B82F6',        // Azul lluvia
-      stormy: '#8B5CF6',       // Púrpura tormenta
-      snowy: '#F3F4F6',        // Blanco nieve
-      foggy: '#D1D5DB',        // Gris niebla
+      // Colores del clima vintage
+      sunny: '#DAA520',        // Dorado oscuro para sol
+      cloudy: '#708090',       // Azul gris para nubes
+      rainy: '#4682B4',        // Azul acero para lluvia
+      stormy: '#6A5ACD',       // Púrpura lavanda para tormentas
+      snowy: '#F0F8FF',        // Azul blanco para nieve
+      foggy: '#A9A9A9',        // Gris oscuro para niebla
 
-      // Estados
-      success: '#10B981',
-      warning: '#F59E0B',
-      error: '#EF4444',
-      info: '#3B82F6',
+      // Estados vintage
+      success: '#228B22',      // Verde oscuro
+      warning: '#CD853F',      // Marrón dorado
+      error: '#DC143C',        // Rojo oscuro
+      info: '#4682B4',         // Azul acero
 
       // Transparencias
-      overlay: 'rgba(248, 250, 252, 0.95)',
-      card: 'rgba(255, 255, 255, 0.8)',
-      border: 'rgba(0, 0, 0, 0.1)',
-      hover: 'rgba(0, 0, 0, 0.05)'
+      overlay: 'rgba(253, 245, 230, 0.95)',
+      card: 'rgba(255, 248, 220, 0.7)',
+      border: 'rgba(139, 90, 60, 0.2)',
+      hover: 'rgba(139, 90, 60, 0.1)',
+      buttonText: '#000000'     // Texto negro para botones
     }
   };
 
@@ -101,6 +105,7 @@ export const ThemeProvider = ({ children }) => {
     
     root.style.setProperty('--primary', colors.primary);
     root.style.setProperty('--secondary', colors.secondary);
+    root.style.setProperty('--accent', colors.accent);
     root.style.setProperty('--background', colors.background);
     root.style.setProperty('--surface', colors.surface);
     root.style.setProperty('--text', colors.textPrimary);
@@ -120,6 +125,7 @@ export const ThemeProvider = ({ children }) => {
     root.style.setProperty('--card', colors.card);
     root.style.setProperty('--border', colors.border);
     root.style.setProperty('--hover', colors.hover);
+    root.style.setProperty('--buttonText', colors.buttonText);
   }, [theme, colorPalettes]);
 
   const value = {

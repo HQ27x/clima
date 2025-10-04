@@ -11,11 +11,12 @@
 }
 
 .progress-card {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(139, 90, 60, 0.1) 0%, rgba(166, 124, 82, 0.1) 100%);
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
 }
 
 .progress-header {
@@ -29,34 +30,38 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.3rem;
   font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 .header-icon {
-  color: #2563EB;
+  color: var(--primary);
   font-size: 1.2rem;
+  transition: color 0.3s ease;
 }
 
 .progress-percentage {
   font-size: 2rem;
   font-weight: 600;
-  color: #10B981;
+  color: var(--secondary);
+  transition: color 0.3s ease;
 }
 
 .progress-bar {
   width: 100%;
   height: 12px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--hover);
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 20px;
+  transition: background-color 0.3s ease;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #2563EB 0%, #10B981 100%);
+  background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
   border-radius: 6px;
   transition: width 0.3s ease;
 }
@@ -74,61 +79,69 @@
 }
 
 .label {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 0.9rem;
+  transition: color 0.3s ease;
 }
 
 .value {
-  color: #FFFFFF;
+  color: var(--text);
   font-weight: 600;
   font-size: 0.9rem;
+  transition: color 0.3s ease;
 }
 
 .location-card {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .location-card h3 {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 16px;
+  transition: color 0.3s ease;
 }
 
 .location-name {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.2rem;
   font-weight: 600;
   margin-bottom: 8px;
+  transition: color 0.3s ease;
 }
 
 .location-coords {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 0.9rem;
+  transition: color 0.3s ease;
 }
 
 .milestones-section,
 .goals-section,
 .history-section {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .milestones-section h3,
 .goals-section h3,
 .history-section h3 {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 20px;
+  transition: color 0.3s ease;
 }
 
 .milestones-list {
@@ -142,19 +155,19 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: var(--hover);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   transition: all 0.3s ease;
 }
 
 .milestone-item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
 }
 
 .milestone-item.completed {
-  background-color: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.3);
+  background-color: rgba(144, 238, 144, 0.1);
+  border-color: var(--success);
 }
 
 .milestone-content {
@@ -171,10 +184,10 @@
 .checkbox {
   width: 24px;
   height: 24px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid var(--border);
   border-radius: 50%;
   background: none;
-  color: #10B981;
+  color: var(--secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -183,28 +196,30 @@
 }
 
 .checkbox:hover {
-  border-color: #10B981;
+  border-color: var(--secondary);
 }
 
 .checkbox.checked {
-  background-color: #10B981;
-  border-color: #10B981;
-  color: #FFFFFF;
+  background-color: var(--secondary);
+  border-color: var(--secondary);
+  color: var(--text);
 }
 
 .milestone-info h4 {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 4px;
+  transition: color 0.3s ease;
 }
 
 .milestone-info p {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 0.9rem;
+  transition: color 0.3s ease;
 }
 
 .icon {
@@ -226,13 +241,13 @@
 }
 
 .status.completed {
-  background-color: rgba(16, 185, 129, 0.2);
-  color: #10B981;
+  background-color: rgba(144, 238, 144, 0.2);
+  color: var(--success);
 }
 
 .status.pending {
-  background-color: rgba(245, 158, 11, 0.2);
-  color: #F59E0B;
+  background-color: rgba(255, 179, 71, 0.2);
+  color: var(--warning);
 }
 
 .goals-grid {
@@ -242,20 +257,20 @@
 }
 
 .goal-card {
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: var(--hover);
   border-radius: 12px;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   transition: all 0.3s ease;
 }
 
 .goal-card:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
 }
 
 .goal-card.completed {
-  background-color: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.3);
+  background-color: rgba(144, 238, 144, 0.1);
+  border-color: var(--success);
 }
 
 .goal-header {
@@ -266,37 +281,41 @@
 }
 
 .goal-header h4 {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.1rem;
   font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 .goal-progress {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 0.9rem;
   font-weight: 500;
+  transition: color 0.3s ease;
 }
 
 .goal-bar {
   width: 100%;
   height: 8px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--hover);
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 8px;
+  transition: background-color 0.3s ease;
 }
 
 .goal-fill {
   height: 100%;
-  background: linear-gradient(90deg, #2563EB 0%, #10B981 100%);
+  background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
 
 .goal-percentage {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 0.8rem;
   text-align: right;
+  transition: color 0.3s ease;
 }
 
 .history-header {
@@ -312,33 +331,35 @@
 }
 
 .add-note-form {
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: var(--hover);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .note-textarea {
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background-color: var(--card);
+  border: 2px solid var(--border);
   border-radius: 8px;
   padding: 12px;
-  color: #FFFFFF;
+  color: var(--text);
   font-family: 'Inter', sans-serif;
   font-size: 1rem;
   resize: vertical;
   margin-bottom: 16px;
+  transition: all 0.3s ease;
 }
 
 .note-textarea:focus {
   outline: none;
-  border-color: #2563EB;
+  border-color: var(--primary);
 }
 
 .note-textarea::placeholder {
-  color: #9CA3AF;
+  color: var(--textSecondary);
 }
 
 .form-actions {
@@ -353,20 +374,22 @@
 }
 
 .history-item {
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: var(--hover);
   border-radius: 12px;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   display: grid;
   grid-template-columns: 120px 1fr 2fr;
   gap: 20px;
   align-items: center;
+  transition: all 0.3s ease;
 }
 
 .history-date {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 0.9rem;
   font-weight: 500;
+  transition: color 0.3s ease;
 }
 
 .history-weather {
@@ -376,21 +399,24 @@
 }
 
 .weather-temp {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.2rem;
   font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 .weather-condition {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 0.9rem;
   text-transform: capitalize;
+  transition: color 0.3s ease;
 }
 
 .history-notes {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 0.95rem;
   line-height: 1.4;
+  transition: color 0.3s ease;
 }
 
 .step-actions {

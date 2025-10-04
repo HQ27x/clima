@@ -85,17 +85,32 @@ const Feedback = ({ location, onNext }) => {
 
   // Renderizar estrellas
   const renderStars = () => {
-    return Array.from({ length: 5 }, (_, index) => (
-      <button
-        key={index}
-        type="button"
-        onClick={() => setRating(index + 1)}
-        className={`star ${index < rating ? 'active' : ''}`}
-        disabled={submitted}
-      >
-        <FiStar />
-      </button>
-    ));
+    return Array.from({ length: 5 }, (_, index) => {
+      const starRating = index + 1;
+      let starClass = 'star';
+      
+      if (index < rating) {
+        starClass += ' active';
+        // Aplicar colores según el rating
+        if (rating === 1) starClass += ' rating-1';
+        else if (rating === 2) starClass += ' rating-2';
+        else if (rating === 3) starClass += ' rating-3';
+        else if (rating === 4) starClass += ' rating-4';
+        else if (rating === 5) starClass += ' rating-5';
+      }
+      
+      return (
+        <button
+          key={index}
+          type="button"
+          onClick={() => setRating(starRating)}
+          className={starClass}
+          disabled={submitted}
+        >
+          <FiStar />
+        </button>
+      );
+    });
   };
 
   // Obtener texto de calificación
@@ -164,7 +179,7 @@ const Feedback = ({ location, onNext }) => {
                 <div className="stars-container">
                   {renderStars()}
                   {rating > 0 && (
-                    <span className="rating-text">
+                    <span className={`rating-text rating-${rating}`}>
                       {getRatingText(rating)}
                     </span>
                   )}
@@ -240,12 +255,24 @@ const Feedback = ({ location, onNext }) => {
                 <div key={item.id} className="feedback-item">
                   <div className="feedback-header">
                     <div className="feedback-rating">
-                      {Array.from({ length: 5 }, (_, index) => (
-                        <FiStar
-                          key={index}
-                          className={`star ${index < item.rating ? 'active' : ''}`}
-                        />
-                      ))}
+                      {Array.from({ length: 5 }, (_, index) => {
+                        let starClass = 'star';
+                        if (index < item.rating) {
+                          starClass += ' active';
+                          // Aplicar colores según el rating
+                          if (item.rating === 1) starClass += ' rating-1';
+                          else if (item.rating === 2) starClass += ' rating-2';
+                          else if (item.rating === 3) starClass += ' rating-3';
+                          else if (item.rating === 4) starClass += ' rating-4';
+                          else if (item.rating === 5) starClass += ' rating-5';
+                        }
+                        return (
+                          <FiStar
+                            key={index}
+                            className={starClass}
+                          />
+                        );
+                      })}
                     </div>
                     <div className="feedback-type">
                       {item.type === 'positive' ? (

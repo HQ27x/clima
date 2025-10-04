@@ -94,13 +94,14 @@
 }
 
 .error-message {
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #FCA5A5;
+  background-color: rgba(255, 107, 107, 0.1);
+  border: 1px solid var(--error);
+  color: var(--error);
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 16px;
   font-size: 0.9rem;
+  transition: all 0.3s ease;
 }
 
 .login-btn {

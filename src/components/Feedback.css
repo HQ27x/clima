@@ -11,26 +11,29 @@
 }
 
 .feedback-card {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
   border-radius: 16px;
   padding: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
 }
 
 .feedback-card h3 {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 24px;
+  transition: color 0.3s ease;
 }
 
 .header-icon {
-  color: #2563EB;
+  color: var(--primary);
   font-size: 1.2rem;
+  transition: color 0.3s ease;
 }
 
 .feedback-form {
@@ -46,9 +49,10 @@
 }
 
 .rating-section label {
-  color: #FFFFFF;
+  color: var(--text);
   font-weight: 500;
   font-size: 1.1rem;
+  transition: color 0.3s ease;
 }
 
 .stars-container {
@@ -60,7 +64,7 @@
 .star {
   background: none;
   border: none;
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 2rem;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -69,12 +73,33 @@
 }
 
 .star:hover {
-  color: #F59E0B;
+  color: var(--warning);
   transform: scale(1.1);
 }
 
 .star.active {
-  color: #F59E0B;
+  color: var(--warning);
+}
+
+/* Colores específicos para cada rating */
+.star.rating-1.active {
+  color: #DC143C; /* Rojo oscuro */
+}
+
+.star.rating-2.active {
+  color: #FF8C00; /* Naranja */
+}
+
+.star.rating-3.active {
+  color: #FFD700; /* Amarillo */
+}
+
+.star.rating-4.active {
+  color: #90EE90; /* Verde claro */
+}
+
+.star.rating-5.active {
+  color: #228B22; /* Verde oscuro */
 }
 
 .star:disabled {
@@ -82,10 +107,32 @@
 }
 
 .rating-text {
-  color: #F59E0B;
+  color: var(--warning);
   font-weight: 600;
   font-size: 1.1rem;
   margin-left: 12px;
+  transition: color 0.3s ease;
+}
+
+/* Colores para el texto de rating según el número de estrellas */
+.rating-text.rating-1 {
+  color: #DC143C;
+}
+
+.rating-text.rating-2 {
+  color: #FF8C00;
+}
+
+.rating-text.rating-3 {
+  color: #FFD700;
+}
+
+.rating-text.rating-4 {
+  color: #90EE90;
+}
+
+.rating-text.rating-5 {
+  color: #228B22;
 }
 
 .feedback-type-section {
@@ -95,9 +142,10 @@
 }
 
 .feedback-type-section label {
-  color: #FFFFFF;
+  color: var(--text);
   font-weight: 500;
   font-size: 1.1rem;
+  transition: color 0.3s ease;
 }
 
 .type-buttons {
@@ -110,10 +158,10 @@
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid var(--border);
   border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #9CA3AF;
+  background-color: var(--hover);
+  color: var(--textSecondary);
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'Inter', sans-serif;
@@ -121,14 +169,14 @@
 }
 
 .type-btn:hover {
-  border-color: #2563EB;
-  color: #FFFFFF;
+  border-color: var(--primary);
+  color: var(--text);
 }
 
 .type-btn.active {
-  border-color: #2563EB;
-  background-color: rgba(37, 99, 235, 0.2);
-  color: #FFFFFF;
+  border-color: var(--primary);
+  background-color: var(--hover);
+  color: var(--text);
 }
 
 .type-icon {
@@ -142,44 +190,48 @@
 }
 
 .feedback-text-section label {
-  color: #FFFFFF;
+  color: var(--text);
   font-weight: 500;
   font-size: 1.1rem;
+  transition: color 0.3s ease;
 }
 
 .feedback-textarea {
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background-color: var(--card);
+  border: 2px solid var(--border);
   border-radius: 8px;
   padding: 16px;
-  color: #FFFFFF;
+  color: var(--text);
   font-family: 'Inter', sans-serif;
   font-size: 1rem;
   resize: vertical;
   min-height: 120px;
+  transition: all 0.3s ease;
 }
 
 .feedback-textarea:focus {
   outline: none;
-  border-color: #2563EB;
+  border-color: var(--primary);
 }
 
 .feedback-textarea::placeholder {
-  color: #9CA3AF;
+  color: var(--textSecondary);
 }
 
 .location-info {
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: var(--hover);
   border-radius: 8px;
   padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .location-info p {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 0.9rem;
   margin-bottom: 4px;
+  transition: color 0.3s ease;
 }
 
 .location-info p:last-child {
@@ -198,21 +250,23 @@
 }
 
 .recent-feedback-section {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
   border-radius: 16px;
   padding: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   min-height: 600px;
+  transition: all 0.3s ease;
 }
 
 .recent-feedback-section h3 {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 24px;
+  transition: color 0.3s ease;
 }
 
 .feedback-list {
@@ -222,15 +276,15 @@
 }
 
 .feedback-item {
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: var(--hover);
   border-radius: 12px;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   transition: all 0.3s ease;
 }
 
 .feedback-item:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--card);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
@@ -258,18 +312,19 @@
 }
 
 .type-icon.positive {
-  color: #10B981;
+  color: var(--success);
 }
 
 .type-icon.negative {
-  color: #F59E0B;
+  color: var(--warning);
 }
 
 .feedback-content-text {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 0.95rem;
   line-height: 1.4;
   margin-bottom: 12px;
+  transition: color 0.3s ease;
 }
 
 .feedback-meta {
@@ -280,12 +335,14 @@
 }
 
 .feedback-location {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-weight: 500;
+  transition: color 0.3s ease;
 }
 
 .feedback-date {
-  color: #6B7280;
+  color: var(--textTertiary);
+  transition: color 0.3s ease;
 }
 
 .no-feedback {
@@ -294,8 +351,9 @@
 }
 
 .no-feedback p {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-style: italic;
+  transition: color 0.3s ease;
 }
 
 .success-container {
@@ -310,22 +368,25 @@
 
 .success-icon {
   font-size: 4rem;
-  color: #10B981;
+  color: var(--success);
   margin-bottom: 24px;
+  transition: color 0.3s ease;
 }
 
 .success-title {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 2.5rem;
   font-weight: 600;
   margin-bottom: 16px;
+  transition: color 0.3s ease;
 }
 
 .success-message {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 1.2rem;
   line-height: 1.6;
   margin-bottom: 32px;
+  transition: color 0.3s ease;
 }
 
 .success-actions {

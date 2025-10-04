@@ -5,14 +5,15 @@
 }
 
 .user-panel {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(123, 179, 240, 0.1) 100%);
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   backdrop-filter: blur(10px);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: all 0.3s ease;
 }
 
 .user-info {
@@ -25,19 +26,21 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background-color: rgba(37, 99, 235, 0.2);
+  background-color: var(--hover);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2563EB;
+  color: var(--primary);
   font-size: 1.5rem;
+  transition: all 0.3s ease;
 }
 
 .user-details h3 {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 8px;
+  transition: color 0.3s ease;
 }
 
 .user-stars {
@@ -48,19 +51,22 @@
 }
 
 .star-icon {
-  color: #F59E0B;
+  color: var(--warning);
   font-size: 1.1rem;
+  transition: color 0.3s ease;
 }
 
 .star-count {
-  color: #F59E0B;
+  color: var(--warning);
   font-weight: 600;
   font-size: 1.1rem;
+  transition: color 0.3s ease;
 }
 
 .star-label {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 0.9rem;
+  transition: color 0.3s ease;
 }
 
 .user-level {
@@ -88,17 +94,19 @@
 }
 
 .filters-section {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .filters-section h3 {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.2rem;
   font-weight: 600;
   margin-bottom: 16px;
+  transition: color 0.3s ease;
 }
 
 .location-filters {
@@ -112,10 +120,10 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid var(--border);
   border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #9CA3AF;
+  background-color: var(--hover);
+  color: var(--textSecondary);
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'Inter', sans-serif;
@@ -123,14 +131,14 @@
 }
 
 .filter-btn:hover {
-  border-color: #2563EB;
-  color: #FFFFFF;
+  border-color: var(--primary);
+  color: var(--text);
 }
 
 .filter-btn.active {
-  border-color: #2563EB;
-  background-color: rgba(37, 99, 235, 0.2);
-  color: #FFFFFF;
+  border-color: var(--primary);
+  background-color: var(--hover);
+  color: var(--text);
 }
 
 .filter-icon {
@@ -138,40 +146,43 @@
 }
 
 .new-post-form {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .new-post-form h3 {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 20px;
+  transition: color 0.3s ease;
 }
 
 .post-textarea {
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background-color: var(--card);
+  border: 2px solid var(--border);
   border-radius: 8px;
   padding: 16px;
-  color: #FFFFFF;
+  color: var(--text);
   font-family: 'Inter', sans-serif;
   font-size: 1rem;
   resize: vertical;
   min-height: 120px;
   margin-bottom: 20px;
+  transition: all 0.3s ease;
 }
 
 .post-textarea:focus {
   outline: none;
-  border-color: #2563EB;
+  border-color: var(--primary);
 }
 
 .post-textarea::placeholder {
-  color: #9CA3AF;
+  color: var(--textSecondary);
 }
 
 .form-actions {
@@ -180,25 +191,28 @@
 }
 
 .posts-section {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .posts-section h3 {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 20px;
+  transition: color 0.3s ease;
 }
 
 .section-icon {
-  color: #2563EB;
+  color: var(--primary);
   font-size: 1.2rem;
+  transition: color 0.3s ease;
 }
 
 .posts-list {
@@ -208,15 +222,15 @@
 }
 
 .post-item {
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: var(--hover);
   border-radius: 12px;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   transition: all 0.3s ease;
 }
 
 .post-item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
   transform: translateY(-2px);
 }
 
@@ -237,19 +251,21 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: rgba(37, 99, 235, 0.2);
+  background-color: var(--hover);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2563EB;
+  color: var(--primary);
   font-size: 1.1rem;
+  transition: all 0.3s ease;
 }
 
 .author-name {
-  color: #FFFFFF;
+  color: var(--text);
   font-weight: 600;
   font-size: 1rem;
   margin-bottom: 2px;
+  transition: color 0.3s ease;
 }
 
 .author-level {
@@ -272,8 +288,9 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 0.8rem;
+  transition: color 0.3s ease;
 }
 
 .meta-icon {
@@ -281,17 +298,18 @@
 }
 
 .post-content {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1rem;
   line-height: 1.6;
   margin-bottom: 16px;
+  transition: color 0.3s ease;
 }
 
 .post-actions {
   display: flex;
   gap: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border);
 }
 
 .action-btn {
@@ -301,8 +319,8 @@
   padding: 8px 12px;
   border: none;
   border-radius: 6px;
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #9CA3AF;
+  background-color: var(--hover);
+  color: var(--textSecondary);
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'Inter', sans-serif;
@@ -310,23 +328,23 @@
 }
 
 .action-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #FFFFFF;
+  background-color: var(--card);
+  color: var(--text);
 }
 
 .like-btn:hover {
-  color: #EF4444;
-  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  background-color: var(--hover);
 }
 
 .star-btn:hover {
-  color: #F59E0B;
-  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+  background-color: var(--hover);
 }
 
 .flag-btn:hover {
-  color: #F59E0B;
-  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+  background-color: var(--hover);
 }
 
 .action-icon {
@@ -336,13 +354,15 @@
 .no-posts {
   text-align: center;
   padding: 60px 20px;
-  color: #9CA3AF;
+  color: var(--textSecondary);
+  transition: color 0.3s ease;
 }
 
 .no-posts-icon {
   font-size: 3rem;
-  color: #6B7280;
+  color: var(--textTertiary);
   margin-bottom: 16px;
+  transition: color 0.3s ease;
 }
 
 .no-posts p {
@@ -359,10 +379,11 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .stat-item {
@@ -374,20 +395,23 @@
 
 .stat-icon {
   font-size: 2rem;
-  color: #2563EB;
+  color: var(--primary);
   flex-shrink: 0;
+  transition: color 0.3s ease;
 }
 
 .stat-number {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.8rem;
   font-weight: 600;
   margin-bottom: 4px;
+  transition: color 0.3s ease;
 }
 
 .stat-label {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 0.9rem;
+  transition: color 0.3s ease;
 }
 
 /* Responsive */

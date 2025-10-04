@@ -1,45 +1,55 @@
 :root {
-  /* Variables por defecto (tema oscuro) */
-  --primary: #2563EB;
-  --secondary: #10B981;
-  --background: #0B1220;
-  --surface: #1E293B;
-  --text: #FFFFFF;
-  --textSecondary: #9CA3AF;
-  --textTertiary: #6B7280;
-  --sunny: #FBBF24;
-  --cloudy: #6B7280;
-  --rainy: #3B82F6;
-  --stormy: #7C3AED;
-  --snowy: #E5E7EB;
-  --foggy: #9CA3AF;
-  --success: #10B981;
-  --warning: #F59E0B;
-  --error: #EF4444;
-  --info: #3B82F6;
-  --overlay: rgba(11, 18, 32, 0.95);
-  --card: rgba(255, 255, 255, 0.05);
-  --border: rgba(255, 255, 255, 0.1);
-  --hover: rgba(255, 255, 255, 0.1);
+  /* Variables por defecto (tema oscuro) - Paleta Azul Vintage */
+  --primary: #4A90E2;           /* Azul vintage para elementos principales */
+  --secondary: #7BB3F0;         /* Azul claro vintage para elementos secundarios */
+  --accent: #B8D4F0;            /* Azul muy claro vintage para acentos */
+  --background: #0F1419;        /* Azul muy oscuro vintage */
+  --surface: #1A2332;           /* Azul gris oscuro vintage */
+  --text: #E8F4FD;              /* Azul muy claro para texto principal */
+  --textSecondary: #B8D4F0;     /* Azul claro para texto secundario */
+  --textTertiary: #8BB3D9;      /* Azul medio para texto terciario */
+  --sunny: #FFD700;             /* Dorado para sol */
+  --cloudy: #B0C4DE;            /* Azul gris claro para nubes */
+  --rainy: #4682B4;             /* Azul acero para lluvia */
+  --stormy: #6A5ACD;            /* Púrpura lavanda para tormentas */
+  --snowy: #F0F8FF;             /* Azul blanco para nieve */
+  --foggy: #C0C0C0;             /* Gris plata para niebla */
+  --success: #90EE90;           /* Verde claro para éxito */
+  --warning: #FFB347;           /* Naranja suave para advertencias */
+  --error: #FF6B6B;             /* Rojo coral para errores */
+  --info: #87CEEB;              /* Azul cielo para información */
+  --overlay: rgba(15, 20, 25, 0.95);
+  --card: rgba(232, 244, 253, 0.08);
+  --border: rgba(232, 244, 253, 0.15);
+  --hover: rgba(232, 244, 253, 0.12);
+  --buttonText: #FFFFFF;        /* Texto blanco para botones en modo oscuro */
 }
 
-/* Tema claro */
+/* Tema claro - Paleta Vintage Sutil */
 [data-theme="light"] {
-  --background: #F8FAFC;
-  --surface: #FFFFFF;
-  --text: #1F2937;
-  --textSecondary: #4B5563;
-  --textTertiary: #6B7280;
-  --sunny: #FBBF24;
-  --cloudy: #9CA3AF;
-  --rainy: #3B82F6;
-  --stormy: #8B5CF6;
-  --snowy: #F3F4F6;
-  --foggy: #D1D5DB;
-  --overlay: rgba(248, 250, 252, 0.95);
-  --card: rgba(255, 255, 255, 0.8);
-  --border: rgba(0, 0, 0, 0.1);
-  --hover: rgba(0, 0, 0, 0.05);
+  --primary: #8B5A3C;           /* Marrón vintage para elementos principales */
+  --secondary: #A67C52;         /* Marrón dorado para elementos secundarios */
+  --accent: #D4AF37;            /* Dorado vintage para acentos */
+  --background: #FDF5E6;        /* Beige muy claro vintage */
+  --surface: #FFF8DC;           /* Beige crema para superficies */
+  --text: #2F2F2F;              /* Gris muy oscuro para texto principal */
+  --textSecondary: #5D4E37;     /* Marrón oscuro para texto secundario */
+  --textTertiary: #8B7355;      /* Marrón medio para texto terciario */
+  --sunny: #DAA520;             /* Dorado oscuro para sol */
+  --cloudy: #708090;            /* Azul gris para nubes */
+  --rainy: #4682B4;             /* Azul acero para lluvia */
+  --stormy: #6A5ACD;            /* Púrpura lavanda para tormentas */
+  --snowy: #F0F8FF;             /* Azul blanco para nieve */
+  --foggy: #A9A9A9;             /* Gris oscuro para niebla */
+  --success: #228B22;           /* Verde oscuro para éxito */
+  --warning: #CD853F;           /* Marrón dorado para advertencias */
+  --error: #DC143C;             /* Rojo oscuro para errores */
+  --info: #4682B4;              /* Azul acero para información */
+  --overlay: rgba(253, 245, 230, 0.95);
+  --card: rgba(255, 248, 220, 0.7);
+  --border: rgba(139, 90, 60, 0.2);
+  --hover: rgba(139, 90, 60, 0.1);
+  --buttonText: #000000;        /* Texto negro para botones en modo claro */
 }
 
 /* Aplicar tema al body */
@@ -98,7 +108,7 @@ body {
 
 .btn-primary {
   background-color: var(--primary);
-  color: var(--text);
+  color: var(--buttonText);
 }
 
 .btn-primary:hover {
@@ -109,7 +119,7 @@ body {
 
 .btn-secondary {
   background-color: var(--secondary);
-  color: var(--text);
+  color: var(--buttonText);
 }
 
 .btn-secondary:hover {
@@ -126,7 +136,7 @@ body {
 
 .btn-outline:hover {
   background-color: var(--primary);
-  color: var(--text);
+  color: var(--buttonText);
 }
 
 .card {

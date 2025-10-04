@@ -6,10 +6,11 @@
 }
 
 .calendar-container {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
   border-radius: 12px;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .calendar-header {
@@ -23,14 +24,16 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.3rem;
   font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 .header-icon {
-  color: #2563EB;
+  color: var(--primary);
   font-size: 1.2rem;
+  transition: color 0.3s ease;
 }
 
 .add-reminder-btn {
@@ -63,17 +66,17 @@
 .react-calendar__navigation button {
   background: none;
   border: none;
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.1rem;
   font-weight: 600;
   padding: 8px 12px;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .react-calendar__navigation button:hover {
-  background-color: rgba(37, 99, 235, 0.2);
+  background-color: var(--hover);
 }
 
 .react-calendar__month-view__weekdays {
@@ -81,17 +84,18 @@
 }
 
 .react-calendar__month-view__weekdays__weekday {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-weight: 600;
   font-size: 0.9rem;
   text-align: center;
   padding: 10px 0;
+  transition: color 0.3s ease;
 }
 
 .react-calendar__tile {
   background: none;
   border: none;
-  color: #FFFFFF;
+  color: var(--text);
   padding: 12px 8px;
   margin: 2px;
   border-radius: 6px;
@@ -101,39 +105,42 @@
 }
 
 .react-calendar__tile:hover {
-  background-color: rgba(37, 99, 235, 0.2);
+  background-color: var(--hover);
 }
 
 .react-calendar__tile--active {
-  background-color: #2563EB;
-  color: #FFFFFF;
+  background-color: var(--primary);
+  color: var(--text);
 }
 
 .react-calendar__tile--now {
-  background-color: rgba(16, 185, 129, 0.2);
-  color: #10B981;
+  background-color: var(--hover);
+  color: var(--secondary);
 }
 
 .calendar-dot {
   position: absolute;
   top: 4px;
   right: 4px;
-  color: #10B981;
+  color: var(--secondary);
   font-size: 0.8rem;
+  transition: color 0.3s ease;
 }
 
 .add-reminder-form {
   margin-top: 24px;
   padding: 20px;
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: var(--hover);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .add-reminder-form h4 {
-  color: #FFFFFF;
+  color: var(--text);
   margin-bottom: 16px;
   font-size: 1.1rem;
+  transition: color 0.3s ease;
 }
 
 .form-group {
@@ -142,18 +149,20 @@
 
 .form-group label {
   display: block;
-  color: #FFFFFF;
+  color: var(--text);
   font-weight: 500;
   margin-bottom: 8px;
+  transition: color 0.3s ease;
 }
 
 .selected-date {
-  color: #10B981;
+  color: var(--secondary);
   font-weight: 600;
-  background-color: rgba(16, 185, 129, 0.1);
+  background-color: var(--hover);
   padding: 8px 12px;
   border-radius: 6px;
   display: inline-block;
+  transition: all 0.3s ease;
 }
 
 .form-actions {
@@ -170,10 +179,11 @@
 
 .upcoming-reminders,
 .selected-date-reminders {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
   border-radius: 12px;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .upcoming-reminders h3,
@@ -181,10 +191,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 16px;
+  transition: color 0.3s ease;
 }
 
 .reminders-list {
@@ -198,14 +209,14 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 12px;
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: var(--hover);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   transition: all 0.3s ease;
 }
 
 .reminder-item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--card);
 }
 
 .reminder-item.completed {
@@ -217,21 +228,24 @@
 }
 
 .reminder-date {
-  color: #10B981;
+  color: var(--secondary);
   font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 4px;
+  transition: color 0.3s ease;
 }
 
 .reminder-text {
-  color: #FFFFFF;
+  color: var(--text);
   font-size: 0.95rem;
   margin-bottom: 4px;
+  transition: color 0.3s ease;
 }
 
 .reminder-location {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   font-size: 0.8rem;
+  transition: color 0.3s ease;
 }
 
 .reminder-actions {
@@ -244,7 +258,7 @@
 .remove-btn {
   background: none;
   border: none;
-  color: #9CA3AF;
+  color: var(--textSecondary);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -253,24 +267,25 @@
 }
 
 .toggle-btn:hover {
-  color: #10B981;
-  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--secondary);
+  background-color: var(--hover);
 }
 
 .toggle-btn.completed {
-  color: #10B981;
+  color: var(--secondary);
 }
 
 .remove-btn:hover {
-  color: #EF4444;
-  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  background-color: var(--hover);
 }
 
 .no-reminders {
-  color: #9CA3AF;
+  color: var(--textSecondary);
   text-align: center;
   font-style: italic;
   padding: 20px;
+  transition: color 0.3s ease;
 }
 
 .step-actions {
