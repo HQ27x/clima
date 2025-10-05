@@ -101,7 +101,7 @@ const Navigation = ({ currentStep }) => {
                       }}
                     >
                       <FiLogOut className="menu-item-icon" />
-                      <span>Cerrar sesión de invitado</span>
+                      <span>Salir de invitado</span>
                     </button>
                   ) : (
                     <>
