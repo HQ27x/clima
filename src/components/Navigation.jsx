@@ -108,7 +108,7 @@ const Navigation = ({ currentStep }) => {
                       <button
                         className="menu-item"
                         role="menuitem"
-                        onClick={() => { setMenuOpen(false); navigate('/profile'); }}
+                        onClick={() => { setMenuOpen(false); navigate('/forum'); }}
                       >
                         <FiUser className="menu-item-icon" />
                         <span>Ver perfil</span>
