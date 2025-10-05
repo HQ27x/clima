@@ -179,8 +179,7 @@
     color-mix(in srgb, var(--primary) 80%, transparent),
     color-mix(in srgb, var(--secondary) 80%, transparent)
   );
-  color: var(--onPrimary, #fff);
-  box-shadow: 0 4px 12px rgba(2,6,23,0.18);
+  color: var(--text);
   border: 1.5px solid var(--primary);
   transition: background 0.2s, color 0.2s;
 }
