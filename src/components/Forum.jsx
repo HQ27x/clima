@@ -475,7 +475,7 @@ const Forum = () => {
         {showEditProfile && (
           <div className="profile-modal-overlay" onClick={() => setShowEditProfile(false)}>
             <div className="profile-modal" onClick={e => e.stopPropagation()}>
-              <h4>Editar foto de perfil</h4>
+              <h4>Edit Profile Photo</h4>
               <div className="profile-img-preview">
                 {profileImg ? <img src={profileImg} alt="preview" /> : <FiCamera size={48} />}
               </div>
@@ -487,10 +487,10 @@ const Forum = () => {
                 onChange={handleProfileImgChange}
               />
               <button className="btn btn-primary" onClick={() => fileInputRef.current.click()}>
-                Seleccionar imagen
+                Select Image
               </button>
               <button className="btn btn-outline" onClick={() => setShowEditProfile(false)}>
-                Cancelar
+                Cancel
               </button>
             </div>
           </div>
