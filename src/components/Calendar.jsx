@@ -282,15 +282,6 @@ const CalendarComponent = ({ location, onNext }) => {
           )}
         </div>
       </div>
-
-      <div className="step-actions">
-        <button
-          onClick={onNext}
-          className="btn btn-primary next-btn"
-        >
-          Continuar al Clima
-        </button>
-      </div>
     </div>
   );
 };
