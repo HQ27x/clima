@@ -13,6 +13,13 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true
       }
+      ,
+      // Proxy local para el servicio Gemini en desarrollo
+      '/backend/geminiAI': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/backend\/geminiAI/, '')
+      }
     }
   },
   build: {

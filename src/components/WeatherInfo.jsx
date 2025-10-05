@@ -10,6 +10,9 @@ const WeatherInfo = ({ location, onNext }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [modelSource, setModelSource] = useState(null); // 'fusion' | 'local' | 'mock'
+  const [geminiRecommendation, setGeminiRecommendation] = useState(null);
+  const [geminiLoading, setGeminiLoading] = useState(false);
+  const [geminiError, setGeminiError] = useState(null);
 
   useEffect(() => {
     let aborted = false;
@@ -150,6 +153,73 @@ const WeatherInfo = ({ location, onNext }) => {
           };
         });
         setForecast(normalized);
+
+        // After we have forecast + current data, try to obtain a recommendation from Gemini
+        (async function callGemini() {
+          try {
+            // Build a concise summary for the PHP service to expand following its internal rules
+            const today = (normalized && normalized[0]) || {};
+            const cur = normalizedCurrent || {};
+            const uv = cur.uvIndex ?? cur.uvi ?? (data.current && (data.current.uvIndex ?? data.current.uvi)) ?? null;
+            const precipToday = (today && typeof today.precipitation === 'number' && today.precipitation > 0) ? 'lluvia esperada' : '';
+            const summary = `Condición actual: ${cur.description || 'N/D'}. Temp entre ${today.low ?? 'N/D'}°C y ${today.high ?? 'N/D'}°C. Humedad ${cur.humidity ?? 'N/D'}%. Viento ${cur.windSpeed ?? 'N/D'} km/h. UV ${uv ?? 'N/D'}. ${precipToday}`;
+
+            setGeminiLoading(true);
+            setGeminiError(null);
+
+            // Try Node server endpoint first, then fall back to PHP endpoint
+            // Try a running Node server on localhost first (useful during `npm run dev`),
+            // then try relative backend paths (PHP or deployed locations).
+            const endpoints = [
+              'http://localhost:8000/gemini-api',
+              'http://localhost:8000/gemini-api.php',
+              '/backend/geminiAI/gemini-api',
+              '/backend/geminiAI/gemini-api.php'
+            ];
+            let resp = null;
+            let lastErr = null;
+            for (const ep of endpoints) {
+              try {
+                resp = await fetch(ep, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: summary }) });
+                // if fetch didn't throw, break and use resp (even if non-200 we'll handle it)
+                break;
+              } catch (err) {
+                lastErr = err;
+                resp = null;
+              }
+            }
+
+            if (!resp) throw lastErr || new Error('No endpoint reachable for Gemini API');
+
+            if (!resp.ok) {
+              const text = await resp.text();
+              throw new Error(`API responded with ${resp.status}: ${text}`);
+            }
+
+            const contentType = resp.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+              const txt = await resp.text();
+              if (txt.trim().startsWith('<?php') || txt.includes('<?php')) {
+                throw new Error('El endpoint devolvió código PHP en lugar de JSON. Asegúrate de ejecutar un servidor PHP (ej: php -S localhost:8000) y acceder vía http://localhost:8000/.');
+              }
+              throw new Error('Respuesta inesperada del servidor (no JSON): ' + txt.slice(0,200));
+            }
+
+            const json = await resp.json();
+            if (json.recomendacion) {
+              setGeminiRecommendation(json.recomendacion);
+            } else if (json.error) {
+              setGeminiError(`${json.error} ${json.message ? '- ' + json.message : ''}`);
+            } else {
+              setGeminiError('Respuesta inesperada de la API');
+            }
+          } catch (e) {
+            console.warn('Gemini call failed', e && e.message ? e.message : e);
+            setGeminiError(e && e.message ? e.message : String(e));
+          } finally {
+            setGeminiLoading(false);
+          }
+        })();
 
       }catch(err){
         if(!aborted) setError('Error al cargar datos del clima');
@@ -333,7 +403,20 @@ const WeatherInfo = ({ location, onNext }) => {
           </div>
         ))}</div></div>
 
-        <div className="alerts-section"><h3>Alertas Meteorológicas</h3><div className="alerts-list"><div className="alert-item warning"><FiCloudRain className="alert-icon" /><div><h4>Posible lluvia</h4><p>Se esperan precipitaciones ligeras mañana por la tarde</p></div></div><div className="alert-item info"><FiSun className="alert-icon" /><div><h4>Índice UV alto</h4><p>Protección solar recomendada entre 10:00 y 16:00</p></div></div></div></div>
+        <div className="alerts-section">
+          <h3>Alertas Meteorológicas y Recomendaciones</h3>
+          <div className="alerts-list">
+            <div className="alert-item warning"><FiCloudRain className="alert-icon" /><div><h4>Posible lluvia</h4><p>Se esperan precipitaciones ligeras mañana por la tarde</p></div></div>
+            <div className="alert-item info"><FiSun className="alert-icon" /><div><h4>Índice UV alto</h4><p>Protección solar recomendada entre 10:00 y 16:00</p></div></div>
+          </div>
+
+          <div className="gemini-recommendation">
+            <h4>Recomendación IA</h4>
+            {geminiLoading && <p>Generando recomendación...</p>}
+            {geminiError && <p className="error-message">{geminiError}</p>}
+            {geminiRecommendation && <p>{geminiRecommendation}</p>}
+          </div>
+        </div>
       </div>
 
       <div className="step-actions"><button onClick={onNext} className="btn btn-primary next-btn">Continuar al Seguimiento</button></div>

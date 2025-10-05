@@ -65,21 +65,53 @@
             let datosParaPrompt = `Pronóstico para mañana en Lima: Condición '${forecast.condition}', temperatura entre ${forecast.temp_min_celsius}°C y ${forecast.temp_max_celsius}°C, humedad del ${forecast.humidity}%. Promedio para el próximo mes: ${prediction.temperature_celsius}°C.`;
 
             try {
-                // 2. Llamar a nuestro intermediario PHP
-                const response = await fetch("gemini-api.php", {
+                // Detect if the page is opened via file:// which cannot call PHP endpoints
+                if (window.location.protocol === 'file:') {
+                    geminiDiv.innerHTML = "<p class='error-message'>La página se abrió desde el sistema de archivos. Inicia un servidor PHP (ej: 'php -S localhost:8000' en esta carpeta) y abre http://localhost:8000/ para probar la API.</p>";
+                    return;
+                }
+
+                // 2. Llamar a nuestro intermediario PHP. Construimos la URL relativa
+                // en base a la ubicación actual para soportar subdirectorios.
+                const base = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+                const apiEndpoint = new URL('gemini-api.php', base).toString();
+
+                const response = await fetch(apiEndpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     // Enviamos el objeto con los datos del clima
                     body: JSON.stringify({ prompt: datosParaPrompt }) 
                 });
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`API responded with ${response.status}: ${text}`);
+                }
+
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    const txt = await response.text();
+                    // If PHP source is returned, it's likely the PHP file wasn't executed
+                    if (txt.trim().startsWith('<?php') || txt.includes('<?php')) {
+                        throw new Error('El endpoint devolvió código PHP en lugar de JSON. Asegúrate de ejecutar un servidor PHP (ej: php -S localhost:8000) y acceder vía http://localhost:8000/.');
+                    }
+                    throw new Error('Respuesta inesperada del servidor (no JSON): ' + txt.slice(0,200));
+                }
+
                 const data = await response.json();
                 
                 // 3. Mostrar la recomendación
-                geminiDiv.innerHTML = `<p>${data.recomendacion}</p>`;
+                if (data.recomendacion) {
+                    geminiDiv.innerHTML = `<p>${data.recomendacion}</p>`;
+                } else if (data.error) {
+                    geminiDiv.innerHTML = `<p class='error-message'>Error desde la API: ${data.error} - ${data.message || JSON.stringify(data.raw || data)}</p>`;
+                } else {
+                    geminiDiv.innerHTML = `<p class='error-message'>Respuesta inesperada: ${JSON.stringify(data)}</p>`;
+                }
 
             } catch (error) {
                 console.error("Error al llamar a Gemini:", error);
-                geminiDiv.innerHTML = "<p class='error-message'>No se pudo obtener la recomendación de la IA.</p>";
+                geminiDiv.innerHTML = `<p class='error-message'>No se pudo obtener la recomendación de la IA. (${error.message})</p>`;
             }
         }
 
