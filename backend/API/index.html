@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Clima - Lima</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .container { background-color: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 800px; }
+        h1 { text-align: center; color: #1a73e8; }
+        .controls { text-align: center; margin-bottom: 25px; }
+        button { background-color: #1a73e8; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 16px; cursor: pointer; transition: background-color 0.3s; }
+        button:hover { background-color: #1558b3; }
+        button:disabled { background-color: #9e9e9e; cursor: not-allowed; }
+        .results-grid { display: grid; grid-template-columns: 1fr; gap: 25px; }
+        .result-card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; }
+        .result-card h2 { margin-top: 0; color: #333; border-bottom: 2px solid #1a73e8; padding-bottom: 10px; }
+        .day-forecast { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #eee; }
+        .day-forecast:last-child { border-bottom: none; }
+        .status-message { text-align: center; font-size: 18px; color: #555; display: none; padding: 20px; }
+        .error-message { color: #d93025; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Dashboard de Clima para Lima</h1>
+        
+        <div class="controls">
+            <button id="fetchButton">Obtener Pronóstico Completo</button>
+        </div>
+
+        <div id="status" class="status-message"></div>
+
+        <div class="results-grid" id="results" style="display:none;">
+            <div class="result-card">
+                <h2>🌦️ Pronóstico Diario (Próximos 5 Días)</h2>
+                <div id="daily-forecast"></div>
+            </div>
+            <div class="result-card">
+                <h2>🧠 Predicción de IA (Promedio Próximo Mes)</h2>
+                <div id="ml-prediction"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('fetchButton').addEventListener('click', () => {
+            const lat = -12.0464;
+            const lng = -77.0428;
+            const apiUrl = `https://api-fusion-34si.onrender.com/predict/full?lat=${lat}&lng=${lng}`;
+
+            const button = document.getElementById('fetchButton');
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            
+            // 1. Prepara la interfaz para la carga
+            button.disabled = true;
+            resultsDiv.style.display = 'none';
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status-message';
+            statusDiv.innerHTML = `<p>Buscando datos en la NASA y OpenWeatherMap... 🛰️</p><p>(Esto puede tardar unos segundos)</p>`;
+
+            // 2. Llama a tu API usando Fetch
+            fetch(apiUrl, { signal: AbortSignal.timeout(35000) })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    statusDiv.style.display = 'none';
+                    resultsDiv.style.display = 'grid';
+                    
+                    // --- 3. Muestra el pronóstico diario ---
+                    const dailyDiv = document.getElementById('daily-forecast');
+                    dailyDiv.innerHTML = '';
+                    const forecastData = data.short_term_forecast_5_days;
+
+                    if (forecastData && forecastData.length > 0) {
+                        forecastData.forEach(day => {
+                            dailyDiv.innerHTML += `
+                                <div class="day-forecast">
+                                    <strong>🗓️ ${day.day_name}, ${day.date}:</strong><br>
+                                    <span>- Condición: ${day.condition}</span><br>
+                                    <span>- Temp. Mín/Máx: ${day.temp_min_celsius}°C / ${day.temp_max_celsius}°C</span><br>
+                                    <span>- Humedad: ${day.humidity}%</span><br>
+                                    <span>- Viento: ${day.wind_speed_ms} m/s</span>
+                                </div>`;
+                        });
+                    } else {
+                        dailyDiv.innerHTML = "<p>No se pudo obtener el pronóstico diario.</p>";
+                    }
+
+                    // --- 4. Muestra la predicción de tu IA ---
+                    const mlDiv = document.getElementById('ml-prediction');
+                    const mlData = data.long_term_ml_prediction_next_month_avg;
+
+                    if (mlData && !mlData.error) {
+                        mlDiv.innerHTML = `
+                            <p><strong>🌡️ Temperatura Promedio:</strong> ${mlData.temperature_celsius || 'N/A'} °C</p>
+                            <p><strong>💧 Humedad Promedio:</strong> ${mlData.humidity_percent || 'N/A'} %</p>
+                            <p><strong>💨 Viento Promedio:</strong> ${mlData.wind_speed_ms || 'N/A'} m/s</p>
+                            <p><strong>🎈 Presión Promedio:</strong> ${mlData.pressure_kpa || 'N/A'} kPa</p>`;
+                    } else {
+                        mlDiv.innerHTML = "<p>No se pudo obtener la predicción de la IA.</p>";
+                    }
+                })
+                .catch(error => {
+                    // 5. Maneja cualquier error
+                    resultsDiv.style.display = 'none';
+                    statusDiv.style.display = 'block';
+                    statusDiv.className = 'status-message error-message';
+                    statusDiv.textContent = `Hubo un error al contactar la API. (${error.message})`;
+                })
+                .finally(() => {
+                    // 6. Reactiva el botón
+                    button.disabled = false;
+                });
+        });
+    </script>
+
+</body>
+</html>
