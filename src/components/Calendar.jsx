@@ -151,7 +151,7 @@ const CalendarComponent = ({ location, onNext }) => {
             onChange={setSelectedDate}
             value={selectedDate}
             locale={es}
-            className="react-calendar"
+            className="react-calendar calendar-modern"
             tileContent={({ date, view }) => {
               if (view === 'month') {
                 const dayReminders = getRemindersForDate(date);
