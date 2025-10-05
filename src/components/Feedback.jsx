@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FiStar, FiMessageSquare, FiThumbsUp, FiThumbsDown, FiSend, FiAward, FiUsers } from 'react-icons/fi';
-import { collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { collection, addDoc, getDocs, getDoc, query, orderBy, limit, serverTimestamp, onSnapshot, where, Timestamp, doc } from 'firebase/firestore';
+import { db, auth } from '../firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
 import './Feedback.css';
 
 const Feedback = ({ location, onNext }) => {
@@ -11,6 +12,43 @@ const Feedback = ({ location, onNext }) => {
   const [submitted, setSubmitted] = useState(false);
   const [recentFeedback, setRecentFeedback] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [firebaseUser, setFirebaseUser] = useState(null);
+  const [profileName, setProfileName] = useState(null);
+
+  // Escuchar auth state
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setFirebaseUser(u || null);
+    });
+    return () => unsub();
+  }, []);
+
+  // Cargar nombre de perfil desde users/{uid} o usar displayName
+  useEffect(() => {
+    let mounted = true;
+    const loadProfileName = async () => {
+      if (!firebaseUser || !firebaseUser.uid) {
+        if (mounted) setProfileName(null);
+        return;
+      }
+      try {
+        const udoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        if (mounted) {
+          if (udoc && udoc.exists()) {
+            const pd = udoc.data();
+            setProfileName(pd.displayName || pd.name || firebaseUser.displayName || null);
+          } else {
+            setProfileName(firebaseUser.displayName || firebaseUser.email || null);
+          }
+        }
+      } catch (e) {
+        console.warn('Error loading profile name:', e);
+        if (mounted) setProfileName(firebaseUser.displayName || firebaseUser.email || null);
+      }
+    };
+    loadProfileName();
+    return () => { mounted = false; };
+  }, [firebaseUser]);
 
   // Cargar feedback reciente en tiempo real
   useEffect(() => {
@@ -61,6 +99,14 @@ const Feedback = ({ location, onNext }) => {
   const handleSubmitFeedback = async (e) => {
     e.preventDefault();
     if (rating === 0 || !feedback.trim()) return;
+    // require logged-in user
+    if (!firebaseUser || !firebaseUser.uid) {
+      if (typeof window !== 'undefined') {
+        window.alert('Debes iniciar sesión para enviar feedback. Serás redirigido al inicio de sesión.');
+        window.location.replace('/login');
+      }
+      return;
+    }
 
     setLoading(true);
     try {
@@ -83,11 +129,70 @@ const Feedback = ({ location, onNext }) => {
         location: location?.name || cityName || 'Ubicación no especificada',
         city: cityName ?? null,
         coordinates: location ? { lat: location.lat, lng: location.lng } : null,
+        userId: firebaseUser.uid,
         timestamp: serverTimestamp(),
         userAgent: navigator.userAgent
       };
+      // rate-limit: allow 1 feedback per user each 24 hours (compare creation timestamp)
+      // also use a local fallback in case the remote query fails or is delayed
+      const localKey = `feedback_last_sent_${firebaseUser.uid}`;
+      try {
+        const lastLocal = localStorage.getItem(localKey);
+        if (lastLocal) {
+          const lastDate = new Date(lastLocal);
+          if (!isNaN(lastDate.getTime())) {
+            const diffMs = Date.now() - lastDate.getTime();
+            const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+            if (diffMs < ONE_DAY_MS) {
+              alert('Solo puedes enviar 1 feedback cada 24 horas. Intenta de nuevo más tarde.');
+              setLoading(false);
+              return;
+            }
+          }
+        }
+      } catch (localErr) {
+        // ignore localStorage errors
+        console.warn('localStorage check failed:', localErr);
+      }
 
-      await addDoc(collection(db, 'feedback'), feedbackData);
+      try {
+        const qLast = query(
+          collection(db, 'feedback'),
+          where('userId', '==', firebaseUser.uid),
+          orderBy('timestamp', 'desc'),
+          limit(1)
+        );
+        const lastSnap = await getDocs(qLast);
+        if (!lastSnap.empty) {
+          const lastDoc = lastSnap.docs[0];
+          const lastData = lastDoc.data() || {};
+          const lastTs = lastData.timestamp;
+          if (lastTs) {
+            let lastDate = null;
+            try {
+              lastDate = typeof lastTs.toDate === 'function' ? lastTs.toDate() : new Date(lastTs);
+            } catch (_) { lastDate = null; }
+            if (lastDate instanceof Date && !isNaN(lastDate.getTime())) {
+              const now = Date.now();
+              const diffMs = now - lastDate.getTime();
+              const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+              if (diffMs < ONE_DAY_MS) {
+                alert('Solo puedes enviar 1 feedback cada 24 horas. Intenta de nuevo más tarde.');
+                setLoading(false);
+                return;
+              }
+            }
+          }
+        }
+      } catch (rqErr) {
+        console.warn('Rate-check failed, permitting submission:', rqErr);
+      }
+
+      const docRef = await addDoc(collection(db, 'feedback'), feedbackData);
+      // on success, persist a local timestamp so subsequent attempts are blocked immediately
+      try {
+        localStorage.setItem(localKey, new Date().toISOString());
+      } catch (lsErr) { console.warn('Could not write local cooldown:', lsErr); }
       
       setSubmitted(true);
       setRating(0);
@@ -148,7 +253,7 @@ const Feedback = ({ location, onNext }) => {
 
   if (submitted) {
     return (
-      <div className="step-container">
+      <div className="success-overlay">
         <div className="success-container">
           <div className="success-icon">
             <FiAward />
@@ -163,14 +268,9 @@ const Feedback = ({ location, onNext }) => {
               onClick={() => setSubmitted(false)}
               className="btn btn-outline"
             >
-              Dar más feedback
+              Volver
             </button>
-            <button
-              onClick={onNext}
-              className="btn btn-primary"
-            >
-              Ver Foro de Participación
-            </button>
+            {/* 'Ver Foro de Participación' button removed per request */}
           </div>
         </div>
       </div>
@@ -191,7 +291,7 @@ const Feedback = ({ location, onNext }) => {
           <div className="feedback-card">
             <h3>
               <FiMessageSquare className="header-icon" />
-              Evalúa tu experiencia
+              {profileName ? `${profileName} evalúa tu experiencia` : 'Evalúa tu experiencia'}
             </h3>
             
             <form onSubmit={handleSubmitFeedback} className="feedback-form">
@@ -327,14 +427,7 @@ const Feedback = ({ location, onNext }) => {
         </div>
       </div>
 
-      <div className="step-actions">
-        <button
-          onClick={onNext}
-          className="btn btn-primary next-btn"
-        >
-          Ver Foro de Participación
-        </button>
-      </div>
+      {/* 'Ver Foro de Participación' action removed per request */}
     </div>
   );
 };
