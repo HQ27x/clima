@@ -280,7 +280,7 @@ const Feedback = ({ location, onNext }) => {
   return (
     <div className="step-container">
       <div className="step-header">
-        <h1 className="step-title">Feedback y Evaluación</h1>
+        <h1 className="step-title">Feedback</h1>
         <p className="step-subtitle">
           Comparte tu experiencia y ayuda a mejorar la aplicación
         </p>
