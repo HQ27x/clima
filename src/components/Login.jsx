@@ -96,9 +96,15 @@ const Login = ({ onLogin }) => {
     } catch (error) {
       console.error('Login/Register error', error);
       if (isLogin) {
-        // Mostrar mensaje específico si existe, incluyendo el código de error si está disponible
-        const codePart = error?.code ? ` [${error.code}]` : '';
-        setError(error?.message ? `Error inicio de sesión: ${error.message}${codePart}` : 'Credenciales incorrectas. Verifica tu correo y contraseña.');
+        // Mostrar mensaje específico para errores de autenticación
+        if (error?.code === 'auth/invalid-login-credentials') {
+          // Mensaje amigable solicitado por el usuario
+          setError('Error de inicio de sesion, usuario y/o contraseña incorrecto.');
+        } else {
+          // Mostrar mensaje detallado para otros códigos
+          const codePart = error?.code ? ` [${error.code}]` : '';
+          setError(error?.message ? `Error inicio de sesión: ${error.message}${codePart}` : 'Credenciales incorrectas. Verifica tu correo y contraseña.');
+        }
       } else {
         // Registro: mostrar código y mensaje si están disponibles
         if (error?.code === 'auth/email-already-in-use') {
