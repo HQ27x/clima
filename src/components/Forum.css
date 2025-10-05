@@ -355,9 +355,11 @@
   cursor: not-allowed;
 }
 
+.like-btn { border: 1px solid var(--border); }
 .like-btn:hover {
-  color: var(--error);
-  background-color: var(--hover);
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  color: var(--buttonText);
+  transform: translateY(-1px);
 }
 
 .star-btn:hover {

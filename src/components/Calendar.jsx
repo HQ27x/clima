@@ -256,7 +256,8 @@ const CalendarComponent = ({ location, onNext }) => {
           />
 
           {showAddReminder && (
-            <div className="add-reminder-form">
+            <div className="add-reminder-modal-overlay" onClick={()=>setShowAddReminder(false)}>
+              <div className="add-reminder-modal" onClick={(e)=>e.stopPropagation()}>
               <h4>Nuevo Recordatorio</h4>
               <div className="form-group">
                 <label>Fecha seleccionada:</label>
@@ -291,6 +292,7 @@ const CalendarComponent = ({ location, onNext }) => {
                 >
                   Cancelar
                 </button>
+              </div>
               </div>
             </div>
           )}

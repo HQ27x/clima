@@ -8,6 +8,7 @@ import LocationSelector from './components/LocationSelector';
 import Calendar from './components/Calendar';
 import WeatherInfo from './components/WeatherInfo';
 import Feedback from './components/Feedback';
+import Profile from './components/Profile';
 import Forum from './components/Forum';
 import Navigation from './components/Navigation';
 import BottomNav from './components/BottomNav';
@@ -121,6 +122,10 @@ function App() {
               <Route 
                 path="/forum" 
                 element={<Forum />} 
+              />
+              <Route 
+                path="/profile" 
+                element={<Profile />} 
               />
               <Route 
                 path="/login" 
