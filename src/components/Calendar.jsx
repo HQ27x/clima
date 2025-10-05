@@ -15,14 +15,46 @@ const CalendarComponent = ({ location, onNext }) => {
   useEffect(() => {
     const savedReminders = localStorage.getItem('weatherReminders');
     if (savedReminders) {
-      setReminders(JSON.parse(savedReminders));
+      try {
+        const parsed = JSON.parse(savedReminders);
+        const normalized = Array.isArray(parsed)
+          ? parsed.map(r => ({
+              ...r,
+              // Normalize dates saved as ISO strings back into Date objects
+              date: r?.date ? new Date(r.date) : new Date(),
+              createdAt: r?.createdAt ? new Date(r.createdAt) : new Date()
+            }))
+          : [];
+
+        setReminders(normalized);
+      } catch (err) {
+        console.error('Failed to parse saved reminders', err);
+        setReminders([]);
+      }
     }
   }, []);
 
   // Guardar recordatorios
   const saveReminders = (reminders) => {
-    localStorage.setItem('weatherReminders', JSON.stringify(reminders));
-    setReminders(reminders);
+    try {
+      // Serialize Date objects to ISO strings so JSON is stable
+      const serializable = (reminders || []).map(r => ({
+        ...r,
+        date: r?.date instanceof Date ? r.date.toISOString() : r?.date,
+        createdAt: r?.createdAt instanceof Date ? r.createdAt.toISOString() : r?.createdAt
+      }));
+
+      localStorage.setItem('weatherReminders', JSON.stringify(serializable));
+      // Keep state with Date objects for easier usage in the UI
+      const normalized = (reminders || []).map(r => ({
+        ...r,
+        date: r?.date instanceof Date ? r.date : new Date(r?.date),
+        createdAt: r?.createdAt instanceof Date ? r.createdAt : new Date(r?.createdAt)
+      }));
+      setReminders(normalized);
+    } catch (err) {
+      console.error('Failed to save reminders', err);
+    }
   };
 
   // Agregar recordatorio
@@ -51,9 +83,15 @@ const CalendarComponent = ({ location, onNext }) => {
 
   // Obtener recordatorios para una fecha específica
   const getRemindersForDate = (date) => {
-    return reminders.filter(reminder => 
-      format(reminder.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
-    );
+    return reminders.filter(reminder => {
+      const rDate = reminder?.date ? new Date(reminder.date) : null;
+      if (!rDate || isNaN(rDate.getTime())) return false;
+      try {
+        return format(rDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+      } catch (e) {
+        return false;
+      }
+    });
   };
 
   // Obtener recordatorios próximos (3-5 días)
@@ -61,10 +99,14 @@ const CalendarComponent = ({ location, onNext }) => {
     const today = new Date();
     const fiveDaysFromNow = addDays(today, 5);
     
-    return reminders.filter(reminder => 
-      isAfter(reminder.date, today) && 
-      isBefore(reminder.date, fiveDaysFromNow)
-    ).sort((a, b) => new Date(a.date) - new Date(b.date));
+    return reminders
+      .map(r => ({ ...r, date: r?.date ? new Date(r.date) : null }))
+      .filter(reminder => {
+        const d = reminder.date;
+        if (!d || isNaN(d.getTime())) return false;
+        return isAfter(d, today) && isBefore(d, fiveDaysFromNow);
+      })
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
   };
 
   // Marcar recordatorio como completado
