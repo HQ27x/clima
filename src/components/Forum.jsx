@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiStar, FiMessageCircle, FiHeart, FiFlag, FiSend, FiAward, FiUsers, FiMapPin, FiCalendar } from 'react-icons/fi';
+import { FiStar, FiMessageCircle, FiHeart, FiFlag, FiSend, FiAward, FiUsers, FiMapPin, FiCalendar, FiCamera, FiEdit2 } from 'react-icons/fi';
 import { collection, addDoc, getDocs, query, orderBy, limit, where, doc, getDoc, onSnapshot, serverTimestamp, runTransaction, increment, updateDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -15,6 +15,9 @@ const Forum = () => {
   const [showNewPost, setShowNewPost] = useState(false);
   const [likedPosts, setLikedPosts] = useState(new Set());
   const [starredPosts, setStarredPosts] = useState(new Set());
+  const [profileImg, setProfileImg] = useState(null);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const fileInputRef = useRef();
 
   // Cargar posts del foro
   useEffect(() => {
@@ -110,6 +113,17 @@ const Forum = () => {
     });
     return () => unsub();
   }, []);
+
+  // Cargar imagen de perfil desde Firestore (si existe)
+  useEffect(() => {
+    if (firebaseUser && firebaseUser.uid) {
+      getDoc(doc(db, 'users', firebaseUser.uid)).then((pDoc) => {
+        if (pDoc.exists()) {
+          setProfileImg(pDoc.data().photoURL || null);
+        }
+      });
+    }
+  }, [firebaseUser]);
 
   // Enviar nuevo post
   const handleSubmitPost = async (e) => {
@@ -383,6 +397,24 @@ const Forum = () => {
     }
   };
 
+  // Profile image change handler
+  const handleProfileImgChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    // Opcional: puedes agregar validación de tipo/tamaño aquí
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64 = reader.result;
+      setProfileImg(base64);
+      // Guarda en Firestore
+      if (firebaseUser && firebaseUser.uid) {
+        await setDoc(doc(db, 'users', firebaseUser.uid), { photoURL: base64 }, { merge: true });
+      }
+      setShowEditProfile(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="step-container">
       <div className="step-header">
@@ -396,8 +428,13 @@ const Forum = () => {
         {/* Panel de usuario */}
         <div className="user-panel">
           <div className="user-info">
-            <div className="user-avatar">
-              <FiUsers />
+            <div className="user-avatar" onClick={() => setShowEditProfile(true)} style={{cursor:'pointer', position:'relative'}}>
+              {profileImg ? (
+                <img src={profileImg} alt="avatar" className="profile-img" />
+              ) : (
+                <FiUsers />
+              )}
+              <span className="edit-avatar-btn"><FiEdit2 /></span>
             </div>
             <div className="user-details">
                 <h3>{profileName ?? 'Tu Perfil'}</h3>
@@ -433,6 +470,31 @@ const Forum = () => {
             </button>
           </div>
         </div>
+
+        {/* Edit profile form (shown on camera icon click) */}
+        {showEditProfile && (
+          <div className="profile-modal-overlay" onClick={() => setShowEditProfile(false)}>
+            <div className="profile-modal" onClick={e => e.stopPropagation()}>
+              <h4>Editar foto de perfil</h4>
+              <div className="profile-img-preview">
+                {profileImg ? <img src={profileImg} alt="preview" /> : <FiCamera size={48} />}
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleProfileImgChange}
+              />
+              <button className="btn btn-primary" onClick={() => fileInputRef.current.click()}>
+                Seleccionar imagen
+              </button>
+              <button className="btn btn-outline" onClick={() => setShowEditProfile(false)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Filters removed per request */}
 
