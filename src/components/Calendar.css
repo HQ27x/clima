@@ -174,7 +174,7 @@
 }
 
 .calendar-modern .react-calendar__tile--active {
-  background: linear-gradient(90deg,var(--primary), #06b6d4);
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
   color: #fff;
   box-shadow: 0 8px 20px rgba(2,6,23,0.5);
 }
@@ -183,7 +183,7 @@
   position: absolute;
   bottom: 4px;
   left: 4px;
-  color: #06b6d4;
+  color: var(--secondary);
   font-size: 0.7rem;
 }
 
