@@ -4,12 +4,26 @@ import { FiCalendar, FiClock, FiBell, FiCheck } from 'react-icons/fi';
 import { format, addDays, isAfter, isBefore } from 'date-fns';
 import { es } from 'date-fns/locale';
 import './Calendar.css';
+import { auth, db } from '../firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  doc,
+  setDoc,
+  deleteDoc,
+  updateDoc,
+  serverTimestamp
+} from 'firebase/firestore';
 
 const CalendarComponent = ({ location, onNext }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [reminders, setReminders] = useState([]);
   const [newReminder, setNewReminder] = useState('');
   const [showAddReminder, setShowAddReminder] = useState(false);
+  const [userUid, setUserUid] = useState(null);
 
   // Cargar recordatorios guardados
   useEffect(() => {
@@ -34,10 +48,57 @@ const CalendarComponent = ({ location, onNext }) => {
     }
   }, []);
 
+  // Subscribe to auth state to know whether to use Firestore
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (fbUser) => {
+      if (fbUser && fbUser.uid) {
+        setUserUid(fbUser.uid);
+      } else {
+        setUserUid(null);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  // If authenticated, listen to Firestore reminders for this user
+  useEffect(() => {
+    if (!userUid) return;
+    const colRef = collection(db, 'users', userUid, 'calendar_reminders');
+    const q = query(colRef, orderBy('date', 'asc'));
+    const unsub = onSnapshot(q, (snap) => {
+      const docs = [];
+      snap.forEach(d => {
+        const data = d.data() || {};
+        // Support Firestore Timestamp and ISO strings
+        const rawDate = data.date;
+        const rawCreated = data.createdAt;
+        const date = rawDate && rawDate.toDate ? rawDate.toDate() : (rawDate ? new Date(rawDate) : new Date());
+        const createdAt = rawCreated && rawCreated.toDate ? rawCreated.toDate() : (rawCreated ? new Date(rawCreated) : new Date());
+        docs.push({
+          id: d.id,
+          text: data.text ?? '',
+          date,
+          createdAt,
+          location: data.location ?? '',
+          completed: !!data.completed
+        });
+      });
+      setReminders(docs);
+    }, (err) => {
+      console.error('Failed to subscribe to reminders', err);
+    });
+
+    return () => unsub();
+  }, [userUid]);
+
   // Guardar recordatorios
   const saveReminders = (reminders) => {
+    // Keep localStorage as fallback for guests (no Firebase auth)
     try {
-      // Serialize Date objects to ISO strings so JSON is stable
+      if (userUid) {
+        // When using Firestore we rely on real-time listener; do not overwrite here
+        return;
+      }
       const serializable = (reminders || []).map(r => ({
         ...r,
         date: r?.date instanceof Date ? r.date.toISOString() : r?.date,
@@ -45,7 +106,6 @@ const CalendarComponent = ({ location, onNext }) => {
       }));
 
       localStorage.setItem('weatherReminders', JSON.stringify(serializable));
-      // Keep state with Date objects for easier usage in the UI
       const normalized = (reminders || []).map(r => ({
         ...r,
         date: r?.date instanceof Date ? r.date : new Date(r?.date),
@@ -69,16 +129,38 @@ const CalendarComponent = ({ location, onNext }) => {
       location: location?.name || 'Ubicación no especificada'
     };
 
-    const updatedReminders = [...reminders, reminder];
-    saveReminders(updatedReminders);
+    if (userUid) {
+      const docRef = doc(db, 'users', userUid, 'calendar_reminders', String(reminder.id));
+      // Use serverTimestamp for createdAt for consistency
+      setDoc(docRef, {
+        text: reminder.text,
+        date: reminder.date.toISOString(),
+        createdAt: serverTimestamp(),
+        location: reminder.location,
+        completed: false
+      }).catch(err => console.error('Failed to add reminder to Firestore', err));
+      // UI will update via onSnapshot; optimistic local update:
+      setReminders(prev => [...prev, reminder]);
+    } else {
+      const updatedReminders = [...reminders, reminder];
+      saveReminders(updatedReminders);
+    }
+
     setNewReminder('');
     setShowAddReminder(false);
   };
 
   // Eliminar recordatorio
   const removeReminder = (id) => {
-    const updatedReminders = reminders.filter(r => r.id !== id);
-    saveReminders(updatedReminders);
+    if (userUid) {
+      const docRef = doc(db, 'users', userUid, 'calendar_reminders', String(id));
+      deleteDoc(docRef).catch(err => console.error('Failed to delete reminder', err));
+      // optimistic update
+      setReminders(prev => prev.filter(r => String(r.id) !== String(id)));
+    } else {
+      const updatedReminders = reminders.filter(r => r.id !== id);
+      saveReminders(updatedReminders);
+    }
   };
 
   // Obtener recordatorios para una fecha específica
@@ -111,12 +193,21 @@ const CalendarComponent = ({ location, onNext }) => {
 
   // Marcar recordatorio como completado
   const toggleReminder = (id) => {
-    const updatedReminders = reminders.map(reminder => 
-      reminder.id === id 
-        ? { ...reminder, completed: !reminder.completed }
-        : reminder
-    );
-    saveReminders(updatedReminders);
+    if (userUid) {
+      const reminder = reminders.find(r => String(r.id) === String(id));
+      const docRef = doc(db, 'users', userUid, 'calendar_reminders', String(id));
+      const newVal = !(reminder && reminder.completed);
+      updateDoc(docRef, { completed: newVal }).catch(err => console.error('Failed to update reminder', err));
+      // optimistic update
+      setReminders(prev => prev.map(r => r.id === id ? { ...r, completed: !r.completed } : r));
+    } else {
+      const updatedReminders = reminders.map(reminder => 
+        reminder.id === id 
+          ? { ...reminder, completed: !reminder.completed }
+          : reminder
+      );
+      saveReminders(updatedReminders);
+    }
   };
 
   const upcomingReminders = getUpcomingReminders();
