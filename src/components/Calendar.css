@@ -1,6 +1,6 @@
 .calendar-section {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr;
   gap: 20px;
   margin-bottom: 24px;
 }
@@ -174,9 +174,14 @@
 }
 
 .calendar-modern .react-calendar__tile--active {
-  background: linear-gradient(90deg, var(--primary), var(--secondary));
-  color: #fff;
-  box-shadow: 0 8px 20px rgba(2,6,23,0.5);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--primary) 80%, transparent),
+    color-mix(in srgb, var(--secondary) 80%, transparent)
+  );
+  color: var(--text);
+  border: 1.5px solid var(--primary);
+  transition: background 0.2s, color 0.2s;
 }
 
 .calendar-modern .calendar-dot {
@@ -451,15 +456,18 @@
   font-size: 1.1rem;
 }
 
+/* Ejemplo para el fondo del modal */
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.25); /* Menos borroso, más limpio */
+  /* Si tienes backdrop-filter: blur(), puedes reducir o quitarlo */
+  /* backdrop-filter: blur(2px); */
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .calendar-section {
     grid-template-columns: 1fr;
     gap: 20px;
-  }
-  
-  .reminders-sidebar {
-    order: -1;
   }
 }
 
