@@ -84,7 +84,7 @@ export const ThemeProvider = ({ children }) => {
       card: 'rgba(255, 248, 220, 0.7)',
       border: 'rgba(139, 90, 60, 0.2)',
       hover: 'rgba(139, 90, 60, 0.1)',
-      buttonText: '#000000'     // Texto negro para botones
+      buttonText: '#FFFFFF'     // Texto blanco para botones
     }
   };
 

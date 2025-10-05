@@ -51,7 +51,7 @@
 
 .nav-step.active {
   background-color: var(--primary);
-  color: var(--text);
+  color: var(--buttonText) !important;
 }
 
 .nav-step.completed {
