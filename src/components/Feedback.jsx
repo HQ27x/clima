@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiStar, FiMessageSquare, FiThumbsUp, FiThumbsDown, FiSend, FiAward, FiUsers } from 'react-icons/fi';
-import { collection, addDoc, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import './Feedback.css';
 
@@ -12,28 +12,50 @@ const Feedback = ({ location, onNext }) => {
   const [recentFeedback, setRecentFeedback] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Cargar feedback reciente
+  // Cargar feedback reciente en tiempo real
   useEffect(() => {
-    const loadRecentFeedback = async () => {
-      try {
-        const q = query(
-          collection(db, 'feedback'),
-          orderBy('timestamp', 'desc'),
-          limit(12)
-        );
-        const querySnapshot = await getDocs(q);
-        const feedbackData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setRecentFeedback(feedbackData);
-      } catch (error) {
-        console.error('Error cargando feedback:', error);
-      }
-    };
+    const q = query(
+      collection(db, 'feedback'),
+      orderBy('timestamp', 'desc'),
+      limit(12)
+    );
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const feedbackData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setRecentFeedback(feedbackData);
+    }, (err) => {
+      console.error('Error en onSnapshot feedback:', err);
+    });
 
-    loadRecentFeedback();
+    return () => unsubscribe();
   }, []);
+
+  const getCityFromLocationProp = (loc) => {
+    let city = loc?.city ?? loc?.name ?? null;
+    if (!city && typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('clima_last_location_v1');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          city = parsed?.city ?? parsed?.name ?? city;
+        }
+      } catch(e) { /* ignore */ }
+    }
+    return city;
+  };
+
+  const formatTimestamp = (ts) => {
+    if (!ts) return '';
+    try {
+      // Firestore Timestamp
+      if (typeof ts.toDate === 'function') return new Date(ts.toDate()).toLocaleString('es-ES');
+      // JS Date
+      if (ts instanceof Date) return ts.toLocaleString('es-ES');
+      // ISO string
+      const d = new Date(ts);
+      if (!isNaN(d.getTime())) return d.toLocaleString('es-ES');
+    } catch (e) {}
+    return '';
+  };
 
   // Enviar feedback
   const handleSubmitFeedback = async (e) => {
@@ -42,16 +64,26 @@ const Feedback = ({ location, onNext }) => {
 
     setLoading(true);
     try {
+      // determine city name from location prop or saved last location
+      let cityName = location?.city ?? location?.name ?? null;
+      if (!cityName && typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('clima_last_location_v1');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            cityName = parsed?.city ?? parsed?.name ?? cityName;
+          }
+        } catch(e) { /* ignore */ }
+      }
+
       const feedbackData = {
         rating,
         feedback: feedback.trim(),
         type: feedbackType,
-        location: location?.name || 'Ubicación no especificada',
-        coordinates: location ? {
-          lat: location.lat,
-          lng: location.lng
-        } : null,
-        timestamp: new Date(),
+        location: location?.name || cityName || 'Ubicación no especificada',
+        city: cityName ?? null,
+        coordinates: location ? { lat: location.lat, lng: location.lng } : null,
+        timestamp: serverTimestamp(),
         userAgent: navigator.userAgent
       };
 
@@ -62,18 +94,7 @@ const Feedback = ({ location, onNext }) => {
       setFeedback('');
       setFeedbackType('positive');
       
-      // Recargar feedback reciente
-      const q = query(
-        collection(db, 'feedback'),
-        orderBy('timestamp', 'desc'),
-        limit(12)
-      );
-      const querySnapshot = await getDocs(q);
-      const recentFeedbackData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setRecentFeedback(recentFeedbackData);
+      // onSnapshot listener will update recentFeedback automatically
       
     } catch (error) {
       console.error('Error enviando feedback:', error);
@@ -223,7 +244,7 @@ const Feedback = ({ location, onNext }) => {
 
               <div className="location-info">
                 <p>
-                  <strong>Ubicación:</strong> {location?.name || 'No especificada'}
+                  <strong>Ubicación:</strong> {getCityFromLocationProp(location) || location?.name || 'No especificada'}
                 </p>
                 {location && (
                   <p>
@@ -289,10 +310,10 @@ const Feedback = ({ location, onNext }) => {
                   
                   <div className="feedback-meta">
                     <span className="feedback-location">
-                      {item.location}
+                      {item.city ?? item.location ?? 'Ubicación seleccionada'}
                     </span>
                     <span className="feedback-date">
-                      {new Date(item.timestamp?.toDate()).toLocaleDateString('es-ES')}
+                      {formatTimestamp(item.timestamp)}
                     </span>
                   </div>
                 </div>

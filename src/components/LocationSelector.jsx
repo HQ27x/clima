@@ -365,7 +365,8 @@ const LocationSelector = ({ onLocationSelect }) => {
     if(selectedLocation){
       try{
         // persist on explicit confirm as well
-        saveLastLocation({ latitude: selectedLocation.lat || selectedLocation.latitude, longitude: selectedLocation.lng || selectedLocation.longitude, accuracy: 0, city: selectedLocation.name || cityText });
+        // Prefer reverse-geocoded cityText when available to avoid saving generic labels like 'Ubicación seleccionada'
+        saveLastLocation({ latitude: selectedLocation.lat || selectedLocation.latitude, longitude: selectedLocation.lng || selectedLocation.longitude, accuracy: 0, city: cityText || selectedLocation.name });
         // show a brief confirmation message
         setSavedNotice(true);
         setTimeout(()=>setSavedNotice(false), 3000);
@@ -373,7 +374,8 @@ const LocationSelector = ({ onLocationSelect }) => {
       if(onLocationSelect) onLocationSelect({
         lat: selectedLocation.lat || selectedLocation.latitude,
         lng: selectedLocation.lng || selectedLocation.longitude,
-        name: selectedLocation.name || cityText || `(${(selectedLocation.lat||selectedLocation.latitude).toFixed ? (selectedLocation.lat||selectedLocation.latitude).toFixed(4) : selectedLocation.lat}, ${(selectedLocation.lng||selectedLocation.longitude).toFixed ? (selectedLocation.lng||selectedLocation.longitude).toFixed(4) : selectedLocation.lng})`
+        // prefer human-readable cityText when available
+        name: cityText || selectedLocation.name || `(${(selectedLocation.lat||selectedLocation.latitude).toFixed ? (selectedLocation.lat||selectedLocation.latitude).toFixed(4) : selectedLocation.lat}, ${(selectedLocation.lng||selectedLocation.longitude).toFixed ? (selectedLocation.lng||selectedLocation.longitude).toFixed(4) : selectedLocation.lng})`
       });
     }
   };

@@ -75,9 +75,63 @@ const WeatherInfo = ({ location, onNext }) => {
 
         if(aborted) return;
 
-        // Normalize shapes
-        const cur = data.current ?? data.current_weather ?? data;
-        setWeatherData(cur || null);
+        // If fusion returned partial data missing visibility/pressure/uvIndex, try to supplement from local proxy
+        try {
+          const needsVisibility = !(data?.current && typeof data.current.visibility === 'number');
+          const needsPressure = !(data?.current && (typeof data.current.pressure === 'number'));
+          const needsUvi = !(data?.current && (typeof data.current.uvi === 'number' || typeof data.current.uvIndex === 'number'));
+          if ((modelSource === 'fusion' || needsVisibility || needsPressure || needsUvi) && lat != null && lng != null) {
+            try {
+              const supCtrl = new AbortController();
+              const supTO = setTimeout(() => supCtrl.abort(), 10000);
+              const supRes = await fetch(`http://localhost:4003/weather?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`, { signal: supCtrl.signal });
+              clearTimeout(supTO);
+              if (supRes.ok) {
+                const supJson = await supRes.json();
+                // Merge current-level fields if missing
+                data.current = data.current || {};
+                const supCur = supJson.current || {};
+                if (typeof supCur.visibility === 'number' && (data.current.visibility == null)) data.current.visibility = supCur.visibility;
+                if (typeof supCur.pressure === 'number' && (data.current.pressure == null)) data.current.pressure = supCur.pressure;
+                if ((typeof supCur.uvIndex === 'number' || typeof supCur.uvi === 'number') && (data.current.uvi == null && data.current.uvIndex == null)) {
+                  const v = supCur.uvIndex ?? supCur.uvi;
+                  data.current.uvi = v;
+                  data.current.uvIndex = v;
+                }
+                if (typeof supCur.humidity === 'number' && (data.current.humidity == null)) data.current.humidity = supCur.humidity;
+                if (typeof supCur.windSpeed === 'number' && (data.current.windSpeed == null)) data.current.windSpeed = supCur.windSpeed;
+              }
+            } catch (e) {
+              // ignore supplement failures
+              console.warn('supplemental local proxy fetch failed', e && e.message ? e.message : e);
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+
+        // Normalize current data shape into a consistent object used by the UI
+  const rawCur = (data.current ?? data.current_weather ?? data) || {};
+        const normalizeWind = (w) => {
+          if (w == null) return null;
+          // if small value assume m/s, convert to km/h
+          if (Math.abs(w) < 15) return Math.round(w * 3.6 * 10) / 10;
+          return Math.round(w * 10) / 10; // already km/h or large value
+        };
+
+        const normalizedCurrent = {
+          temperature: rawCur.temperature ?? rawCur.temp ?? rawCur.temp_c ?? rawCur.temp_celsius ?? null,
+          feelsLike: rawCur.feelsLike ?? rawCur.feels_like ?? rawCur.apparent_temperature ?? null,
+          humidity: rawCur.humidity ?? rawCur.humidity_percent ?? rawCur.relative_humidity ?? null,
+          windSpeed: normalizeWind(rawCur.windSpeed ?? rawCur.wind_speed ?? rawCur.wind_speed_ms ?? rawCur.wind_speed_kmh ?? null),
+          visibility: (typeof rawCur.visibility === 'number') ? (Math.round((rawCur.visibility || 0) / 1000)) : (rawCur.visibility_km ?? null),
+          pressure: rawCur.pressure ?? rawCur.pressure_hpa ?? rawCur.pressure_kpa ?? null,
+          description: rawCur.description ?? rawCur.condition ?? (rawCur.weather?.[0]?.description) ?? null,
+          icon: rawCur.icon ?? rawCur.icon_code ?? null,
+          uvIndex: rawCur.uvIndex ?? rawCur.uvi ?? rawCur.uv ?? null
+        };
+
+        setWeatherData(normalizedCurrent);
 
         const rawForecast = Array.isArray(data.forecast) ? data.forecast : (Array.isArray(data.short_term_forecast_5_days) ? data.short_term_forecast_5_days : (Array.isArray(data.forecast_days) ? data.forecast_days : []));
         const normalized = (rawForecast || []).slice(0,5).map(it => {
@@ -88,6 +142,9 @@ const WeatherInfo = ({ location, onNext }) => {
             high: it.temp_max_celsius ?? it.high ?? it.temp?.max ?? it.max ?? null,
             low: it.temp_min_celsius ?? it.low ?? it.temp?.min ?? it.min ?? null,
             description: it.condition ?? it.description ?? it.weather ?? '',
+            humidity: it.humidity ?? it.humidity_percent ?? it.humidity_percentile ?? null,
+            // normalize wind: prefer explicit meters/sec key then convert, otherwise accept km/h
+            windSpeed: (typeof it.wind_speed_ms === 'number') ? Math.round(it.wind_speed_ms * 3.6 * 10) / 10 : (it.wind_speed_kmh ?? it.wind_speed ?? it.wind_speed_ms ?? null),
             precipitation: it.precipitation ?? it.rain ?? 0,
             icon: it.icon ?? null
           };
@@ -124,6 +181,74 @@ const WeatherInfo = ({ location, onNext }) => {
     if (uvIndex <= 7) return '#F97316';
     if (uvIndex <= 10) return '#EF4444';
     return '#8B5CF6';
+  };
+
+  // Calculate an estimated 'exact' temperature for today when current temp is not provided.
+  const getTodayExactTemp = (forecastArr, current) => {
+    try {
+      // If current data provides a temperature, prefer it
+      if (current && typeof current.temperature === 'number') return current.temperature;
+
+      const now = new Date();
+      const isSameDay = (d1, d2) => d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
+
+      // Find forecast entry for today
+      let todayEntry = (forecastArr || []).find(f => f && f.date && isSameDay(new Date(f.date), now));
+      // If not found, use the first forecast entry as best-effort
+      if (!todayEntry) todayEntry = (forecastArr || [])[0];
+      if (!todayEntry) return null;
+
+      const high = typeof todayEntry.high === 'number' ? todayEntry.high : null;
+      const low = typeof todayEntry.low === 'number' ? todayEntry.low : null;
+      if (high == null || low == null) return null;
+
+      const hour = now.getHours();
+      let estimate;
+      // Simple heuristic by time of day:
+      // 00:00-05:59 => noche (valor cercano al mínimo)
+      // 06:00-11:59 => mañana (valor entre min y media)
+      // 12:00-17:59 => tarde (valor cercano al máximo)
+      // 18:00-23:59 => noche temprano (valor entre min y media baja)
+      if (hour >= 12 && hour < 18) {
+        estimate = high; // afternoon tends to be warmest
+      } else if (hour >= 6 && hour < 12) {
+        estimate = low + 0.5 * (high - low); // morning midpoint
+      } else if (hour >= 18 && hour < 24) {
+        estimate = low + 0.25 * (high - low); // evening cools down
+      } else {
+        estimate = low; // late night / early morning -> minimum
+      }
+
+      // Round to one decimal if fractional
+      return Math.round(estimate * 10) / 10;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  // Build a small summary for today's main values (condition, temp, humidity, wind)
+  const getTodaySummary = (forecastArr, current) => {
+    try {
+      const temp = getTodayExactTemp(forecastArr, current);
+      const now = new Date();
+      const isSameDay = (d1, d2) => d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
+
+      let todayEntry = (forecastArr || []).find(f => f && f.date && isSameDay(new Date(f.date), now));
+      if (!todayEntry) todayEntry = (forecastArr || [])[0] || null;
+
+      const description = (current && current.description) ? current.description : (todayEntry && todayEntry.description) ? todayEntry.description : null;
+      const humidity = (current && typeof current.humidity === 'number') ? current.humidity : (todayEntry && typeof todayEntry.humidity === 'number' ? todayEntry.humidity : null);
+      const windSpeed = (current && typeof current.windSpeed === 'number') ? current.windSpeed : (todayEntry && typeof todayEntry.windSpeed === 'number' ? todayEntry.windSpeed : null);
+
+      return {
+        temperature: temp,
+        description,
+        humidity,
+        windSpeed
+      };
+    } catch (e) {
+      return { temperature: null, description: null, humidity: null, windSpeed: null };
+    }
   };
 
   if (loading) {
@@ -163,13 +288,35 @@ const WeatherInfo = ({ location, onNext }) => {
         <div className="current-weather">
           <div className="weather-main">
             <div className="weather-icon-large">{getWeatherIcon(weatherData?.icon)}</div>
-            <div className="weather-temp"><span className="temperature">{weatherData?.temperature ?? '—'}°</span><span className="feels-like">Sensación térmica {weatherData?.feelsLike ?? '—'}°</span></div>
+            <div className="weather-temp">
+              {(() => {
+                const todayVals = getTodaySummary(forecast, weatherData);
+                const hasRealCurrent = weatherData && typeof weatherData.temperature === 'number';
+                const display = (hasRealCurrent ? weatherData.temperature : todayVals.temperature);
+                return (
+                  <>
+                    <span className="temperature">{display != null ? `${display}°` : '—'}</span>
+                    <span className="feels-like">Sensación térmica {weatherData?.feelsLike ?? '—'}°</span>
+                    {!hasRealCurrent && todayVals.temperature != null && (<div className="estimated-note">(valor estimado para hoy según horario)</div>)}
+                  </>
+                );
+              })()}
+            </div>
             <div className="weather-description"><h3>{weatherData?.description ?? '—'}</h3><p>{format(new Date(), 'EEEE, dd MMMM', { locale: es })}</p></div>
           </div>
 
           <div className="weather-details">
-            <div className="detail-item"><FiWind className="detail-icon" /><div><span className="detail-value">{weatherData?.windSpeed ?? '—'} km/h</span><span className="detail-label">Viento</span></div></div>
-            <div className="detail-item"><FiDroplet className="detail-icon" /><div><span className="detail-value">{weatherData?.humidity ?? '—'}%</span><span className="detail-label">Humedad</span></div></div>
+            {(() => {
+              const todayVals = getTodaySummary(forecast, weatherData);
+              const windDisplay = todayVals.windSpeed ?? weatherData?.windSpeed ?? null;
+              const humidityDisplay = todayVals.humidity ?? weatherData?.humidity ?? null;
+              return (
+                <>
+                  <div className="detail-item"><FiWind className="detail-icon" /><div><span className="detail-value">{windDisplay != null ? `${windDisplay} km/h` : '—'}</span><span className="detail-label">Viento</span></div></div>
+                  <div className="detail-item"><FiDroplet className="detail-icon" /><div><span className="detail-value">{humidityDisplay != null ? `${humidityDisplay}%` : '—'}</span><span className="detail-label">Humedad</span></div></div>
+                </>
+              );
+            })()}
             <div className="detail-item"><FiEye className="detail-icon" /><div><span className="detail-value">{weatherData?.visibility ?? '—'} km</span><span className="detail-label">Visibilidad</span></div></div>
             <div className="detail-item"><FiThermometer className="detail-icon" /><div><span className="detail-value">{weatherData?.pressure ?? '—'} hPa</span><span className="detail-label">Presión</span></div></div>
             <div className="detail-item"><FiSun className="detail-icon" /><div><span className="detail-value" style={{color: getUVIndexColor(weatherData?.uvIndex)}}>{weatherData?.uvIndex ?? '—'}</span><span className="detail-label">Índice UV</span></div></div>
