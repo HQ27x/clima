@@ -214,6 +214,31 @@
   transition: color 0.3s ease;
 }
 
+/* Guest login button styles */
+.guest-btn {
+  display: inline-block;
+  margin: 8px auto 0 auto; /* center horizontally within its container */
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  color: var(--textSecondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.guest-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+  transform: translateY(-2px);
+}
+
+.guest-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Estilos para el campo select */
 .select-input {
   appearance: none;

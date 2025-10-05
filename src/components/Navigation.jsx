@@ -1,11 +1,15 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase/config';
 import { FiMapPin, FiCalendar, FiCloud, FiMessageSquare, FiUsers } from 'react-icons/fi';
 import ThemeToggle from './ThemeToggle';
 import './Navigation.css';
 
 const Navigation = ({ currentStep }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const isLoginRoute = location.pathname === '/login';
   
   const steps = [
     { path: '/', icon: FiMapPin, label: 'Ubicación', step: 1 },
@@ -19,11 +23,12 @@ const Navigation = ({ currentStep }) => {
     <nav className="navigation">
       <div className="nav-container">
         <div className="nav-logo">
-          <h2>Alertify</h2>
+          {!isLoginRoute && <h2>Alertify</h2>}
         </div>
         
-        <div className="nav-steps">
-          {steps.map((step, index) => {
+        {!isLoginRoute && (
+          <div className="nav-steps">
+            {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = location.pathname === step.path;
             const isCompleted = currentStep > step.step;
@@ -38,12 +43,23 @@ const Navigation = ({ currentStep }) => {
                 <span className="nav-label">{step.label}</span>
               </Link>
             );
-          })}
-        </div>
+            })}
+          </div>
+        )}
         
-        <div className="nav-actions">
-          <ThemeToggle />
-        </div>
+        {!isLoginRoute && (
+          <div className="nav-actions">
+            <ThemeToggle />
+            <button
+              className="btn btn-logout"
+              onClick={async ()=>{
+                try{ await signOut(auth); }catch(e){ /* ignore */ }
+                if (typeof window !== 'undefined') localStorage.removeItem('clima_guest');
+                navigate('/login');
+              }}
+            >Salir</button>
+          </div>
+        )}
       </div>
     </nav>
   );

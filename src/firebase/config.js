@@ -46,3 +46,14 @@ try {
 }
 
 export default app;
+
+// Dev debug: print minimal firebase config to help diagnose auth/project mismatches
+try {
+  if (typeof window !== 'undefined' && import.meta.env.DEV) {
+    // print only non-secret identifying fields
+    // eslint-disable-next-line no-console
+    console.info('[firebase-config] projectId=', firebaseConfig.projectId, ' apiKey=', firebaseConfig.apiKey ? firebaseConfig.apiKey.slice(0,6) + '...' : undefined);
+  }
+} catch (e) {
+  // ignore logging errors
+}

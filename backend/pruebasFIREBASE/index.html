@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pruebas Firebase - Firestore</title>
+  <style>
+    body{font-family:Arial;margin:20px;color:#0b1220}
+    button{margin:6px;padding:8px 12px}
+    pre{background:#f3f4f6;padding:12px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <h1>Pruebas Firestore</h1>
+
+  <div>
+    <label>Nombre: <input id="name" value="Prueba Usuario"></label><br>
+    <label>Email: <input id="email" value="prueba@local.test"></label><br>
+    <label>Sexo:
+      <select id="gender">
+        <option value="masculino">Masculino</option>
+        <option value="femenino">Femenino</option>
+        <option value="otro">Otro</option>
+        <option value="prefiero-no-decir">Prefiero no decir</option>
+      </select>
+    </label><br>
+    <button id="btnCreate">Crear usuario (collection: users)</button>
+    <button id="btnList">Listar usuarios</button>
+  </div>
+
+  <h2>Salida</h2>
+  <pre id="output">Aquí aparecerá la salida...</pre>
+
+  <script type="module">
+    // Importar SDK modular desde CDN
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+    import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
+
+    // Pega aquí tu firebaseConfig (o mantenlo tal cual si ya lo tienes)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhI4LjpUGRpf1oU-cFofq-fkivK4MKiKc",
+      authDomain: "alertacausa.firebaseapp.com",
+      projectId: "alertacausa",
+      storageBucket: "alertacausa.firebasestorage.app",
+      messagingSenderId: "514087363199",
+      appId: "1:514087363199:web:3c93dc6b73ecc68ea3554a",
+      measurementId: "G-03H942FV0N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const out = (v) => { document.getElementById('output').textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2); };
+
+    document.getElementById('btnCreate').addEventListener('click', async () => {
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const gender = document.getElementById('gender').value;
+      try {
+        const docRef = await addDoc(collection(db, 'users'), {
+          displayName: name,
+          email: email,
+          gender: gender,
+          createdAt: serverTimestamp()
+        });
+        out('Documento creado: ' + docRef.id);
+      } catch (err) {
+        out('Error creando documento: ' + err.message);
+        console.error(err);
+      }
+    });
+
+    document.getElementById('btnList').addEventListener('click', async () => {
+      try {
+        const qSnap = await getDocs(collection(db, 'users'));
+        const list = [];
+        qSnap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+        out(list);
+      } catch (err) {
+        out('Error listando: ' + err.message);
+        console.error(err);
+      }
+    });
+
+  </script>
+</body>
+</html>

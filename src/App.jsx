@@ -12,16 +12,37 @@ import Forum from './components/Forum';
 import Navigation from './components/Navigation';
 import ThemeToggle from './components/ThemeToggle';
 import './App.css';
+import { seedFirestoreSample } from './utils/firestoreSeed';
 
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
   const [location, setLocation] = useState(null);
+  const [seedResult, setSeedResult] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      // If Firebase returns a real user, use it.
+      if (fbUser) {
+        setUser(fbUser);
+        setLoading(false);
+        return;
+      }
+
+      // No firebase user: check if the app was opened as a guest
+      try {
+        if (typeof window !== 'undefined' && localStorage.getItem('clima_guest') === '1') {
+          // Represent guest with a simple object so components can detect truthy user
+          setUser({ guest: true });
+        } else {
+          setUser(null);
+        }
+      } catch (e) {
+        // If accessing localStorage fails, default to null
+        setUser(null);
+      }
+
       setLoading(false);
     });
 
@@ -49,6 +70,26 @@ function App() {
     <ThemeProvider>
       <Router>
         <div className="app">
+          {import.meta.env.DEV && (
+            <div style={{position:'fixed', right:12, bottom:12, zIndex:2000}}>
+              <button className="btn" onClick={async ()=>{
+                try{
+                  const res = await seedFirestoreSample();
+                  setSeedResult(res);
+                  alert('Seed completo. Revisa Firestore o el log.');
+                }catch(e){
+                  console.error(e);
+                  alert('Error al seedear: ' + (e.message || e));
+                }
+              }}>Seed DB (dev)</button>
+            </div>
+          )}
+          {seedResult && import.meta.env.DEV && (
+            <div style={{position:'fixed', left:12, bottom:12, zIndex:2000, background:'#0b1220', color:'#fff', padding:12, borderRadius:6}}>
+              <strong>Seed result:</strong>
+              <pre style={{maxHeight:200, overflow:'auto', marginTop:6}}>{JSON.stringify(seedResult, null, 2)}</pre>
+            </div>
+          )}
           <Navigation currentStep={currentStep} />
           <main className="main-content">
             <Routes>

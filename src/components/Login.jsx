@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
+import { auth, db } from '../firebase/config';
+import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiUserCheck } from 'react-icons/fi';
 import './Login.css';
 
@@ -14,31 +15,43 @@ const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Usuarios predeterminados para pruebas
-  const defaultUsers = [
-    { email: 'admin@clima.com', password: 'admin123', name: 'Administrador' },
-    { email: 'usuario@clima.com', password: 'user123', name: 'Usuario' },
-    { email: 'test@clima.com', password: 'test123', name: 'Test' }
-  ];
+  // Login is shown before Router is mounted in App, so avoid using useNavigate here.
+
+  // no demo users
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    console.log('Login.handleSubmit start', { isLogin, email });
+
     try {
       if (isLogin) {
-        // Modo login - verificar usuarios predeterminados primero
-        const user = defaultUsers.find(u => u.email === email && u.password === password);
-        
-        if (user) {
-          // Usuario predeterminado encontrado
-          console.log(`Bienvenido ${user.name}`);
+        console.log('Login: attempting sign in', email);
+        // Modo login - intentar con Firebase Auth
+        try {
+          const cred = await signInWithEmailAndPassword(auth, email, password);
+          console.log('Login: signInWithEmailAndPassword returned', cred && cred.user && cred.user.uid);
+          const user = cred.user;
+          // Verificar que exista el perfil en Firestore users/{uid}
+          const profileSnap = await getDoc(doc(db, 'users', user.uid));
+          console.log('Login: profileSnap.exists=', profileSnap.exists());
+          if (!profileSnap.exists()) {
+            // Si no existe, cerrar sesión y mostrar error
+            await signOut(auth);
+            setError('No existe perfil asociado en la base de datos. Regístrate primero.');
+            return;
+          }
+          // Login exitoso y perfil existe
+          console.log('Login successful and profile exists, calling onLogin');
           onLogin();
-        } else {
-          // Intentar con Firebase si está configurado
-          await signInWithEmailAndPassword(auth, email, password);
-          onLogin();
+          // App will re-render and mount Router; force navigation to root
+          if (typeof window !== 'undefined') window.location.replace('/');
+        } catch (err) {
+          console.error('Login error during signIn', err);
+          // Pasar al catch general
+          throw err;
         }
       } else {
         // Modo registro - validar campos requeridos
@@ -47,18 +60,73 @@ const Login = ({ onLogin }) => {
           return;
         }
         
-        // Crear usuario con Firebase
-        await createUserWithEmailAndPassword(auth, email, password);
-        console.log(`Usuario registrado: ${name} (${gender})`);
-        onLogin();
+  // Crear usuario con Firebase
+  console.log('Register: creating user', email);
+  const userCred = await createUserWithEmailAndPassword(auth, email, password);
+  console.log('Register: createUserWithEmailAndPassword returned', userCred && userCred.user && userCred.user.uid);
+  const user = userCred.user;
+        // Actualizar displayName en el perfil de Auth (opcional)
+        try {
+          await updateProfile(user, { displayName: name });
+        } catch (updErr) {
+          // no critico
+          console.warn('No se pudo actualizar displayName:', updErr);
+        }
+
+        // Guardar perfil en Firestore en collection 'users' (docId = uid)
+        try {
+          await setDoc(doc(db, 'users', user.uid), {
+            displayName: name,
+            email: email,
+            gender: gender,
+            createdAt: serverTimestamp()
+          });
+    console.log('Register: profile saved in Firestore for', user.uid);
+        } catch (dbErr) {
+          console.error('Error guardando usuario en Firestore:', dbErr);
+          // si falla guardar perfil, cerrar sesión para evitar inconsistencias
+          try { await signOut(auth); } catch(e){ /* ignore */ }
+          throw dbErr;
+        }
+
+  console.log(`Usuario registrado: ${name} (${gender})`);
+  onLogin();
+  if (typeof window !== 'undefined') window.location.replace('/');
       }
     } catch (error) {
+      console.error('Login/Register error', error);
       if (isLogin) {
-        setError('Credenciales incorrectas. Usa los usuarios predeterminados o verifica tu configuración de Firebase.');
+        // Mostrar mensaje específico si existe, incluyendo el código de error si está disponible
+        const codePart = error?.code ? ` [${error.code}]` : '';
+        setError(error?.message ? `Error inicio de sesión: ${error.message}${codePart}` : 'Credenciales incorrectas. Verifica tu correo y contraseña.');
       } else {
-        setError('Error al registrar usuario. Verifica que el correo no esté en uso.');
+        // Registro: mostrar código y mensaje si están disponibles
+        if (error?.code === 'auth/email-already-in-use') {
+          setError('El correo ya está en uso. Prueba iniciar sesión o usa otro correo.');
+        } else {
+          setError(error?.message ? `Error al registrar usuario: ${error.message}` : 'Error al registrar usuario. Verifica que el correo no esté en uso.');
+        }
       }
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestLogin = () => {
+    // allow a quick guest/login without Firebase auth (for demos)
+    console.log('Guest login requested');
+    try{
+      setLoading(true);
+      // mark guest in localStorage so other parts of the app can detect
+      if (typeof window !== 'undefined') localStorage.setItem('clima_guest', '1');
+      // short delay to show spinner
+      setTimeout(()=>{
+        setLoading(false);
+        onLogin();
+        if (typeof window !== 'undefined') window.location.replace('/');
+      }, 200);
+    }catch(e){
+      console.error('Guest login failed', e);
       setLoading(false);
     }
   };
@@ -160,6 +228,18 @@ const Login = ({ onLogin }) => {
           >
             {loading ? 'Cargando...' : (isLogin ? 'Iniciar Sesión' : 'Registrarse')}
           </button>
+          {isLogin && (
+            <div style={{marginTop:8, display:'flex', justifyContent:'center'}}>
+              <button
+                type="button"
+                onClick={handleGuestLogin}
+                disabled={loading}
+                className="guest-btn"
+              >
+                Iniciar sesión sin cuenta
+              </button>
+            </div>
+          )}
         </form>
 
         <div className="login-footer">
@@ -175,30 +255,7 @@ const Login = ({ onLogin }) => {
           </p>
         </div>
 
-        {isLogin && (
-          <div className="demo-users">
-            <h4>Usuarios de Prueba</h4>
-            <div className="demo-users-list">
-              {defaultUsers.map((user, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => {
-                    setEmail(user.email);
-                    setPassword(user.password);
-                  }}
-                  className="demo-user-btn"
-                >
-                  <span className="demo-email">{user.email}</span>
-                  <span className="demo-password">{user.password}</span>
-                </button>
-              ))}
-            </div>
-            <p className="demo-info">
-              Haz clic en cualquier usuario para llenar automáticamente los campos
-            </p>
-          </div>
-        )}
+        {/* demo users removed */}
       </div>
     </div>
   );
