@@ -23,7 +23,7 @@ const ThemeToggle = () => {
         </div>
       </div>
       <span className="toggle-label">
-        {isDark ? 'Claro' : 'Oscuro'}
+        {isDark ? 'Light' : 'Dark'}
       </span>
     </button>
   );

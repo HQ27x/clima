@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiCloud, FiSun, FiCloudRain, FiWind, FiDroplet, FiEye, FiThermometer, FiClock } from 'react-icons/fi';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import './WeatherInfo.css';
 
 const WeatherInfo = ({ location, onNext }) => {
@@ -101,14 +101,14 @@ const WeatherInfo = ({ location, onNext }) => {
                 windSpeed: windMs * 3.6, // convert m/s to km/h for normalization
                 visibility: visibilityKm,
                 pressure: pressureHpa,
-                description: ['Soleado', 'Parcialmente nublado', 'Nublado', 'Lluvias aisladas'][Math.floor(rand(8) * 4)] || 'Parcialmente nublado',
+                description: ['Sunny', 'Partly cloudy', 'Cloudy', 'Isolated showers'][Math.floor(rand(8) * 4)] || 'Partly cloudy',
                 icon: ['sunny', 'partly-cloudy', 'cloudy', 'rainy'][Math.floor(rand(9) * 4)] || 'partly-cloudy',
                 uvIndex: uvi
               },
-              short_term_forecast_5_days: Array.from({ length: 5 }).map((_, i) => ({
-                day_name: `día${i + 1}`,
+                short_term_forecast_5_days: Array.from({ length: 5 }).map((_, i) => ({
+                day_name: `day${i + 1}`,
                 date: new Date(Date.now() + (i + 1) * 86400000).toISOString(),
-                condition: i % 4 === 0 ? 'Soleado' : (i % 3 === 0 ? 'Nublado' : (i % 2 === 0 ? 'Lluvias' : 'Parcial')),
+                condition: i % 4 === 0 ? 'Sunny' : (i % 3 === 0 ? 'Cloudy' : (i % 2 === 0 ? 'Rain' : 'Partly')),
                 temp_min_celsius: Math.round((tempBase - 3 + rand(i + 10) * 3) * 10) / 10,
                 temp_max_celsius: Math.round((tempBase + 3 + rand(i + 11) * 3) * 10) / 10,
                 humidity: Math.round(Math.min(100, humidity + rand(i + 12) * 10)),
@@ -118,13 +118,13 @@ const WeatherInfo = ({ location, onNext }) => {
           } else {
             dataSource = 'mock';
             data = {
-              current: { temperature: 22, feelsLike: 25, humidity: 65, windSpeed: 12, visibility: 10, pressure: 1013, description: 'Parcialmente nublado', icon: 'partly-cloudy', uvIndex: 6 },
+              current: { temperature: 22, feelsLike: 25, humidity: 65, windSpeed: 12, visibility: 10, pressure: 1013, description: 'Partly cloudy', icon: 'partly-cloudy', uvIndex: 6 },
               short_term_forecast_5_days: [
-                { day_name: 'mañana', date: new Date(Date.now() + 1 * 86400000).toISOString(), condition: 'Soleado', temp_min_celsius: 18, temp_max_celsius: 26, humidity: 60, wind_speed_ms: 3 },
-                { day_name: 'día2', date: new Date(Date.now() + 2 * 86400000).toISOString(), condition: 'Lluvia ligera', temp_min_celsius: 16, temp_max_celsius: 24, humidity: 70, wind_speed_ms: 4 },
-                { day_name: 'día3', date: new Date(Date.now() + 3 * 86400000).toISOString(), condition: 'Nublado', temp_min_celsius: 20, temp_max_celsius: 28, humidity: 65, wind_speed_ms: 5 },
-                { day_name: 'día4', date: new Date(Date.now() + 4 * 86400000).toISOString(), condition: 'Soleado', temp_min_celsius: 22, temp_max_celsius: 30, humidity: 50, wind_speed_ms: 3 },
-                { day_name: 'día5', date: new Date(Date.now() + 5 * 86400000).toISOString(), condition: 'Tormenta', temp_min_celsius: 19, temp_max_celsius: 27, humidity: 80, wind_speed_ms: 6 }
+                { day_name: 'tomorrow', date: new Date(Date.now() + 1 * 86400000).toISOString(), condition: 'Sunny', temp_min_celsius: 18, temp_max_celsius: 26, humidity: 60, wind_speed_ms: 3 },
+                { day_name: 'day2', date: new Date(Date.now() + 2 * 86400000).toISOString(), condition: 'Light rain', temp_min_celsius: 16, temp_max_celsius: 24, humidity: 70, wind_speed_ms: 4 },
+                { day_name: 'day3', date: new Date(Date.now() + 3 * 86400000).toISOString(), condition: 'Cloudy', temp_min_celsius: 20, temp_max_celsius: 28, humidity: 65, wind_speed_ms: 5 },
+                { day_name: 'day4', date: new Date(Date.now() + 4 * 86400000).toISOString(), condition: 'Sunny', temp_min_celsius: 22, temp_max_celsius: 30, humidity: 50, wind_speed_ms: 3 },
+                { day_name: 'day5', date: new Date(Date.now() + 5 * 86400000).toISOString(), condition: 'Storm', temp_min_celsius: 19, temp_max_celsius: 27, humidity: 80, wind_speed_ms: 6 }
               ]
             };
           }
@@ -132,6 +132,11 @@ const WeatherInfo = ({ location, onNext }) => {
 
         // At this point we have 'data' and a local 'dataSource'. Use dataSource for further decisions and then persist to state.
         if (dataSource) setModelSource(dataSource);
+
+        // Diagnostic: log what source we ended with and a sample of current data to help debugging
+        try {
+          console.log('WeatherInfo: fetched dataSource=', dataSource, 'data.current=', data && data.current ? data.current : null);
+        } catch (e) { /* ignore */ }
 
         if(aborted) return;
 
@@ -356,18 +361,19 @@ const WeatherInfo = ({ location, onNext }) => {
             if (!contentType.includes('application/json')) {
               const txt = await resp.text();
               if (txt.trim().startsWith('<?php') || txt.includes('<?php')) {
-                throw new Error('El endpoint devolvió código PHP en lugar de JSON. Asegúrate de ejecutar un servidor PHP (ej: php -S localhost:8000) y acceder vía http://localhost:8000/.');
+                throw new Error('The endpoint returned PHP code instead of JSON. Ensure a PHP server is running (e.g. php -S localhost:8000) and access via http://localhost:8000/.');
               }
-              throw new Error('Respuesta inesperada del servidor (no JSON): ' + txt.slice(0,200));
+              throw new Error('Unexpected server response (not JSON): ' + txt.slice(0,200));
             }
 
             const json = await resp.json();
-            if (json.recomendacion) {
-              setGeminiRecommendation(json.recomendacion);
+            // Accept either Spanish or English key names
+            if (json.recomendacion || json.recommendation) {
+              setGeminiRecommendation(json.recomendacion ?? json.recommendation);
             } else if (json.error) {
               setGeminiError(`${json.error} ${json.message ? '- ' + json.message : ''}`);
             } else {
-              setGeminiError('Respuesta inesperada de la API');
+              setGeminiError('Unexpected API response');
             }
           } catch (e) {
             console.warn('Gemini call failed', e && e.message ? e.message : e);
@@ -381,13 +387,14 @@ const WeatherInfo = ({ location, onNext }) => {
         const today = (normalized && normalized[0]) || {};
         const cur = normalizedCurrent || {};
         const uv = cur.uvIndex ?? cur.uvi ?? (data.current && (data.current.uvIndex ?? data.current.uvi)) ?? null;
-        const precipToday = (today && typeof today.precipitation === 'number' && today.precipitation > 0) ? 'lluvia esperada' : '';
-        const builtSummary = `Condición actual: ${cur.description || 'N/D'}. Temp entre ${today.low ?? 'N/D'}°C y ${today.high ?? 'N/D'}°C. Humedad ${cur.humidity ?? 'N/D'}%. Viento ${cur.windSpeed ?? 'N/D'} km/h. UV ${uv ?? 'N/D'}. ${precipToday}`;
+  const precipToday = (today && typeof today.precipitation === 'number' && today.precipitation > 0) ? 'rain expected' : '';
+  const builtSummary = `Current condition: ${cur.description || 'N/A'}. Temp between ${today.low ?? 'N/A'}°C and ${today.high ?? 'N/A'}°C. Humidity ${cur.humidity ?? 'N/A'}%. Wind ${cur.windSpeed ?? 'N/A'} km/h. UV ${uv ?? 'N/A'}. ${precipToday}`;
         callGemini(builtSummary);
 
-      }catch(err){
-        if(!aborted) setError('Error al cargar datos del clima');
-        console.error('fetchWeather error', err);
+        }catch(err){
+          const msg = err && err.message ? err.message : String(err);
+          if(!aborted) setError(`Error loading weather data: ${msg}`);
+          console.error('fetchWeather error', err);
       }finally{
         if(!aborted) setLoading(false);
       }
@@ -397,6 +404,31 @@ const WeatherInfo = ({ location, onNext }) => {
 
     return ()=>{ aborted = true; };
   }, [location]);
+
+  // Last-resort fallback: if we finished loading and there's no error nor weatherData, provide a synthetic sample
+  useEffect(() => {
+    if (!loading && !error && !weatherData) {
+      const sample = {
+        temperature: 22,
+        feelsLike: 23,
+        humidity: 60,
+        windSpeed: 12,
+        visibility: 12,
+        pressure: 1013,
+        description: 'Partly cloudy',
+        icon: 'partly-cloudy',
+        uvIndex: 4,
+        visibilityEstimated: true,
+        pressureEstimated: true,
+        uvEstimated: true
+      };
+      try {
+        setWeatherData(sample);
+        setModelSource(prev => prev || 'synthetic-fallback');
+        console.warn('WeatherInfo: applied synthetic fallback sample to avoid blank UI');
+      } catch (e) { /* ignore */ }
+    }
+  }, [loading, error, weatherData]);
 
   const getWeatherIcon = (iconType) => {
     const iconMap = {
@@ -440,7 +472,7 @@ const WeatherInfo = ({ location, onNext }) => {
       let estimate;
       // Simple heuristic by time of day:
       // 00:00-05:59 => noche (valor cercano al mínimo)
-      // 06:00-11:59 => mañana (valor entre min y media)
+  // 06:00-11:59 => morning (value between min and mid)
       // 12:00-17:59 => tarde (valor cercano al máximo)
       // 18:00-23:59 => noche temprano (valor entre min y media baja)
       if (hour >= 12 && hour < 18) {
@@ -485,15 +517,73 @@ const WeatherInfo = ({ location, onNext }) => {
     }
   };
 
+  // Translate some common Spanish condition phrases to English for display consistency
+  const translateCondition = (cond) => {
+    if (!cond || typeof cond !== 'string') return cond;
+    const c = cond.trim().toLowerCase();
+    // Specific Spanish phrases
+    if (c.includes('very cloudy') || c.includes('very cloudy')) return 'Very cloudy';
+    if (c.includes('nubos') || c.includes('nuboso')) return 'Mostly cloudy';
+    if (c.includes('soleado') || c.includes('sunny')) return 'Sunny';
+    if (c.includes('parcial') || c.includes('partly')) return 'Partly cloudy';
+    if (c.includes('nublado') || c.includes('cloudy')) return 'Cloudy';
+    if (c.includes('lluv') || c.includes('rain')) return 'Rain';
+    if (c.includes('torment') || c.includes('storm')) return 'Storm';
+    if (c.includes('nubes') || c.includes('clouds')) return 'Clouds';
+    // Fallback: capitalize
+    return cond.charAt(0).toUpperCase() + cond.slice(1);
+  };
+
+  // Lightweight translator for AI recommendation text from Spanish -> English for common phrases
+  const translateRecommendation = (txt) => {
+    if (!txt || typeof txt !== 'string') return txt;
+    let out = txt.trim();
+    // quick phrase and word replacements (case-insensitive)
+    const reps = {
+      'prefiere': 'Prefers',
+      'ropa': 'clothing',
+      'ligera': 'light',
+      'transpirable': 'breathable',
+      'protégete': 'Protect yourself',
+      'protegete': 'Protect yourself',
+      'crema solar': 'sunscreen',
+      'protector solar': 'sunscreen',
+      'usar': 'use',
+      'llevar': 'bring',
+      'lleva': 'bring',
+      'paraguas': 'an umbrella',
+      'chaqueta': 'a jacket',
+      'capa': 'a layer',
+      'riesgo de lluvia': 'risk of rain',
+      'alto índice uv': 'high UV index',
+      'índice uv alto': 'high UV index',
+      'muy nuboso': 'Very cloudy',
+      'nuboso': 'Mostly cloudy',
+      'lluvia': 'rain',
+      'soleado': 'sunny',
+      'temperatura': 'temperature'
+    };
+    Object.keys(reps).forEach(k => {
+      try {
+        out = out.replace(new RegExp(k, 'ig'), reps[k]);
+      } catch (e) {
+        // ignore regex failures
+      }
+    });
+    // Capitalize first letter if not already
+    if (out.length > 0) out = out.charAt(0).toUpperCase() + out.slice(1);
+    return out;
+  };
+
   if (loading) {
     return (
       <div className="step-container">
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>Cargando información del clima...</p>
-          {modelSource === 'fusion' && <p style={{marginTop:8,fontSize:13,color:'#9CA3AF'}}>Usando modelo: API entrenada (puede tardar unos segundos)</p>}
-          {modelSource === 'local' && <p style={{marginTop:8,fontSize:13,color:'#9CA3AF'}}>Usando modelo: proxy local</p>}
-          {modelSource === 'mock' && <p style={{marginTop:8,fontSize:13,color:'#9CA3AF'}}>Usando datos simulados</p>}
+          <p>Loading weather information...</p>
+          {modelSource === 'fusion' && <p style={{marginTop:8,fontSize:13,color:'#9CA3AF'}}>Using model: Trained API (may take a few seconds)</p>}
+          {modelSource === 'local' && <p style={{marginTop:8,fontSize:13,color:'#9CA3AF'}}>Using model: Local proxy</p>}
+          {modelSource === 'mock' && <p style={{marginTop:8,fontSize:13,color:'#9CA3AF'}}>Using synthetic data</p>}
         </div>
       </div>
     );
@@ -513,10 +603,17 @@ const WeatherInfo = ({ location, onNext }) => {
   return (
     <div className="step-container">
       <div className="step-header">
-        <h1 className="step-title">Información del Clima</h1>
-        <p className="step-subtitle">Condiciones actuales y pronóstico para {location?.name || (localStorage.getItem('clima_last_location_v1') ? 'Ubicación guardada' : 'Ubicación no seleccionada')}</p>
-        {modelSource && <div style={{marginTop:8,fontSize:13,color:'#6B7280'}}>Fuente de datos: {modelSource === 'fusion' ? 'API entrenada (fusion)' : modelSource === 'local' ? 'Proxy local' : 'Simulado'}</div>}
+        <h1 className="step-title">Weather Information</h1>
+          <p className="step-subtitle">Current conditions and forecast for {location?.name || (localStorage.getItem('clima_last_location_v1') ? 'Saved location' : 'No location selected')}</p>
+        {modelSource && <div style={{marginTop:8,fontSize:13,color:'#6B7280'}}>Data source: {modelSource === 'fusion' ? 'Trained API (fusion)' : modelSource === 'local' ? 'Local proxy' : 'Synthetic'}</div>}
       </div>
+
+      {/* Debug hint: show when there is no data but we're not loading or in an error state */}
+      {!loading && !error && !weatherData && (
+        <div style={{marginTop:12,padding:10,borderRadius:6,background:'#FFFBEB',border:'1px solid #FDE68A',color:'#92400E'}}>
+          <strong>Debug:</strong> No weather data available. Open the browser console and look for logs starting with "WeatherInfo:". Data source: {modelSource ?? 'unknown'}.
+        </div>
+      )}
 
       <div className="weather-content">
         <div className="current-weather">
@@ -530,13 +627,13 @@ const WeatherInfo = ({ location, onNext }) => {
                 return (
                   <>
                     <span className="temperature">{display != null ? `${display}°` : '—'}</span>
-                    <span className="feels-like">Sensación térmica {weatherData?.feelsLike ?? '—'}°</span>
-                    {!hasRealCurrent && todayVals.temperature != null && (<div className="estimated-note">(valor estimado para hoy según horario)</div>)}
+                    <span className="feels-like">Feels like {weatherData?.feelsLike ?? '—'}°</span>
+                    {!hasRealCurrent && todayVals.temperature != null && (<div className="estimated-note">(estimated for today based on time of day)</div>)}
                   </>
                 );
               })()}
             </div>
-            <div className="weather-description"><h3>{weatherData?.description ?? '—'}</h3><p>{format(new Date(), 'EEEE, dd MMMM', { locale: es })}</p></div>
+            <div className="weather-description"><h3>{weatherData?.description ?? '—'}</h3><p>{format(new Date(), 'EEEE, dd MMMM', { locale: enUS })}</p></div>
           </div>
 
           <div className="weather-details">
@@ -544,53 +641,58 @@ const WeatherInfo = ({ location, onNext }) => {
               const todayVals = getTodaySummary(forecast, weatherData);
               const windDisplay = todayVals.windSpeed ?? weatherData?.windSpeed ?? null;
               const humidityDisplay = todayVals.humidity ?? weatherData?.humidity ?? null;
-              return (
+                  return (
                 <>
-                  <div className="detail-item"><FiWind className="detail-icon" /><div><span className="detail-value">{windDisplay != null ? `${windDisplay} km/h` : '—'}</span><span className="detail-label">Viento</span></div></div>
-                  <div className="detail-item"><FiDroplet className="detail-icon" /><div><span className="detail-value">{humidityDisplay != null ? `${humidityDisplay}%` : '—'}</span><span className="detail-label">Humedad</span></div></div>
+                  <div className="detail-item"><FiWind className="detail-icon" /><div><span className="detail-value">{windDisplay != null ? `${windDisplay} km/h` : '—'}</span><span className="detail-label">Wind</span></div></div>
+                  <div className="detail-item"><FiDroplet className="detail-icon" /><div><span className="detail-value">{humidityDisplay != null ? `${humidityDisplay}%` : '—'}</span><span className="detail-label">Humidity</span></div></div>
                 </>
               );
             })()}
-            <div className="detail-item"><FiEye className="detail-icon" /><div><span className="detail-value">{weatherData?.visibility ?? '—'} km{weatherData?.visibilityEstimated ? ' *' : ''}</span><span className="detail-label">Visibilidad{weatherData?.visibilityEstimated ? ' (estimada)' : ''}</span></div></div>
-            <div className="detail-item"><FiThermometer className="detail-icon" /><div><span className="detail-value">{weatherData?.pressure ?? '—'} hPa{weatherData?.pressureEstimated ? ' *' : ''}</span><span className="detail-label">Presión{weatherData?.pressureEstimated ? ' (estimada)' : ''}</span></div></div>
-            <div className="detail-item"><FiSun className="detail-icon" /><div><span className="detail-value" style={{color: getUVIndexColor(weatherData?.uvIndex)}}>{weatherData?.uvIndex ?? '—'}{weatherData?.uvEstimated ? ' *' : ''}</span><span className="detail-label">Índice UV{weatherData?.uvEstimated ? ' (estimado)' : ''}</span></div></div>
+      <div className="detail-item"><FiEye className="detail-icon" /><div><span className="detail-value">{weatherData?.visibility ?? '—'} km{weatherData?.visibilityEstimated ? ' *' : ''}</span><span className="detail-label">Visibility{weatherData?.visibilityEstimated ? ' (estimated)' : ''}</span></div></div>
+    <div className="detail-item"><FiThermometer className="detail-icon" /><div><span className="detail-value">{weatherData?.pressure ?? '—'} hPa{weatherData?.pressureEstimated ? ' *' : ''}</span><span className="detail-label">Pressure{weatherData?.pressureEstimated ? ' (estimated)' : ''}</span></div></div>
+    <div className="detail-item"><FiSun className="detail-icon" /><div><span className="detail-value" style={{color: getUVIndexColor(weatherData?.uvIndex)}}>{weatherData?.uvIndex ?? '—'}{weatherData?.uvEstimated ? ' *' : ''}</span><span className="detail-label">UV Index{weatherData?.uvEstimated ? ' (estimated)' : ''}</span></div></div>
           </div>
         </div>
 
-        <div className="forecast-section"><h3><FiClock className="section-icon" /> Pronóstico de 5 días</h3><div className="forecast-list">{forecast.map((day, i)=> (
+  <div className="forecast-section"><h3><FiClock className="section-icon" /> 5-day forecast</h3><div className="forecast-list">{forecast.map((day, i)=> (
           <div key={i} className="forecast-item">
-            <div className="forecast-date"><span className="day">{format(day.date, 'EEE', { locale: es })}</span><span className="date">{format(day.date, 'dd/MM')}</span></div>
+            <div className="forecast-date"><span className="day">{format(day.date, 'EEE', { locale: enUS })}</span><span className="date">{format(day.date, 'dd/MM')}</span></div>
             <div className="forecast-icon">{getWeatherIcon(day.icon)}</div>
             <div className="forecast-temps"><span className="high-temp">{day.high ?? '—'}°</span><span className="low-temp">{day.low ?? '—'}°</span></div>
-            <div className="forecast-desc">{day.description}</div>
+            <div className="forecast-desc">{translateCondition(day.description)}</div>
             {day.precipitation > 0 && (<div className="precipitation"><FiDroplet className="precip-icon" />{day.precipitation}mm</div>)}
           </div>
         ))}</div></div>
 
-        <div className="alerts-section">
-          <h3>Alertas Meteorológicas y Recomendaciones</h3>
+          <div className="alerts-section">
+          <h3>Weather Alerts & Recommendations</h3>
           <div className="alerts-list">
-            <div className="alert-item warning"><FiCloudRain className="alert-icon" /><div><h4>Posible lluvia</h4><p>Se esperan precipitaciones ligeras mañana por la tarde</p></div></div>
-            <div className="alert-item info"><FiSun className="alert-icon" /><div><h4>Índice UV alto</h4><p>Protección solar recomendada entre 10:00 y 16:00</p></div></div>
+            <div className="alert-item warning"><FiCloudRain className="alert-icon" /><div><h4>Possible rain</h4><p>Light showers expected tomorrow afternoon</p></div></div>
+            <div className="alert-item info"><FiSun className="alert-icon" /><div><h4>High UV index</h4><p>Sunscreen recommended between 10:00 and 16:00</p></div></div>
           </div>
 
           <div className="gemini-recommendation">
-            <h4>Recomendación IA</h4>
+            <h4>AI Recommendation</h4>
             <div className="gemini-card">
               <div className="gemini-left">
                 <div style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8,background:'rgba(0,0,0,0.04)'}}>🤖</div>
               </div>
               <div className="gemini-right">
                 <div className="gemini-header">
-                  <div className="gemini-provider">{geminiLoading ? 'Generando...' : (geminiRecommendation ? 'Recomendación' : 'IA (local)')}</div>
+                  <div className="gemini-provider">{geminiLoading ? 'Generating...' : (geminiRecommendation ? 'Recommendation' : 'Local AI')}</div>
                   <div className="gemini-actions">
                     {geminiLoading ? <div className="gemini-spinner" aria-hidden></div> : null}
                   </div>
                 </div>
                 <div className="gemini-text">
                   {geminiError && <div className="error-message">{geminiError}</div>}
-                  {!geminiError && !geminiRecommendation && !geminiLoading && <div className="gemini-text" style={{color:'var(--textSecondary)'}}>No hay recomendación aún. Se generará automáticamente al obtener datos del clima o puedes reintentar manualmente.</div>}
-                  {geminiRecommendation && <div>{geminiRecommendation}</div>}
+                  {!geminiError && !geminiRecommendation && !geminiLoading && <div className="gemini-text" style={{color:'var(--textSecondary)'}}>No recommendation yet. One will be generated automatically when weather data is available or you can retry manually.</div>}
+                  {geminiRecommendation && <div>{translateRecommendation(geminiRecommendation)}</div>}
+                  {!geminiRecommendation && !geminiError && !geminiLoading && (
+                    <div>
+                      Prefers light, breathable clothing. Alertify AI — your ally for a day without weather surprises.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -598,7 +700,7 @@ const WeatherInfo = ({ location, onNext }) => {
         </div>
       </div>
 
-      <div className="step-actions"><button onClick={onNext} className="btn btn-primary next-btn">Continuar al Seguimiento</button></div>
+  <div className="step-actions"><button onClick={onNext} className="btn btn-primary next-btn">Continue to Tracking</button></div>
     </div>
   );
 };

@@ -36,11 +36,11 @@ const Navigation = ({ currentStep }) => {
   }, [location.pathname]);
   
   const steps = [
-    { path: '/', icon: FiMapPin, label: 'Ubicación', step: 1 },
-    { path: '/calendar', icon: FiCalendar, label: 'Calendario', step: 2 },
-    { path: '/weather', icon: FiCloud, label: 'Clima', step: 3 },
-    { path: '/feedback', icon: FiMessageSquare, label: 'Feedback', step: 4 },
-    { path: '/forum', icon: FiUsers, label: 'Foro', step: 5 }
+  { path: '/', icon: FiMapPin, label: 'Location', step: 1 },
+  { path: '/calendar', icon: FiCalendar, label: 'Calendar', step: 2 },
+  { path: '/weather', icon: FiCloud, label: 'Weather', step: 3 },
+  { path: '/feedback', icon: FiMessageSquare, label: 'Feedback', step: 4 },
+  { path: '/forum', icon: FiUsers, label: 'Forum', step: 5 }
   ];
 
   return (
@@ -84,7 +84,7 @@ const Navigation = ({ currentStep }) => {
                 aria-haspopup="true"
                 aria-expanded={menuOpen}
                 onClick={() => setMenuOpen((v) => !v)}
-                title="Opciones"
+                title="Options"
               >
                 <FiMoreVertical />
               </button>
@@ -101,7 +101,7 @@ const Navigation = ({ currentStep }) => {
                       }}
                     >
                       <FiLogOut className="menu-item-icon" />
-                      <span>Salir de invitado</span>
+                      <span>Exit guest</span>
                     </button>
                   ) : (
                     <>
@@ -111,7 +111,7 @@ const Navigation = ({ currentStep }) => {
                         onClick={() => { setMenuOpen(false); navigate('/forum'); }}
                       >
                         <FiUser className="menu-item-icon" />
-                        <span>Ver perfil</span>
+                        <span>View profile</span>
                       </button>
                       <button
                         className="menu-item"
@@ -124,7 +124,7 @@ const Navigation = ({ currentStep }) => {
                         }}
                       >
                         <FiLogOut className="menu-item-icon" />
-                        <span>Cerrar sesión</span>
+                        <span>Sign out</span>
                       </button>
                     </>
                   )}

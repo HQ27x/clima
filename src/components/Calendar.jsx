@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import { FiCalendar, FiClock, FiBell, FiCheck } from 'react-icons/fi';
 import { format, addDays, isAfter, isBefore } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import './Calendar.css';
 import { auth, db } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -216,9 +216,9 @@ const CalendarComponent = ({ location, onNext }) => {
   return (
     <div className="step-container">
       <div className="step-header">
-        <h1 className="step-title">Calendario de Recordatorios</h1>
+        <h1 className="step-title">Reminders Calendar</h1>
         <p className="step-subtitle">
-          Programa recordatorios meteorológicos para los próximos 5 días
+          Schedule weather reminders for the next 5 days
         </p>
       </div>
 
@@ -227,21 +227,21 @@ const CalendarComponent = ({ location, onNext }) => {
           <div className="calendar-header">
             <h3>
               <FiCalendar className="header-icon" />
-              Calendario
+              Calendar
             </h3>
             <button
               onClick={() => setShowAddReminder(!showAddReminder)}
               className="btn btn-primary add-reminder-btn"
             >
               <FiBell className="btn-icon" />
-              Agregar Recordatorio
+              Add Reminder
             </button>
           </div>
 
           <Calendar
             onChange={setSelectedDate}
             value={selectedDate}
-            locale={es}
+            locale={'en-US'}
             className="react-calendar calendar-modern"
             tileContent={({ date, view }) => {
               if (view === 'month') {
@@ -258,20 +258,20 @@ const CalendarComponent = ({ location, onNext }) => {
           {showAddReminder && (
             <div className="add-reminder-modal-overlay" onClick={()=>setShowAddReminder(false)}>
               <div className="add-reminder-modal" onClick={(e)=>e.stopPropagation()}>
-              <h4>Nuevo Recordatorio</h4>
+              <h4>New Reminder</h4>
               <div className="form-group">
-                <label>Fecha seleccionada:</label>
+                <label>Selected date:</label>
                 <p className="selected-date">
-                  {format(selectedDate, 'dd/MM/yyyy', { locale: es })}
+                  {format(selectedDate, 'dd/MM/yyyy', { locale: enUS })}
                 </p>
               </div>
               <div className="form-group">
-                <label>Descripción del recordatorio:</label>
+                <label>Reminder description:</label>
                 <input
                   type="text"
                   value={newReminder}
                   onChange={(e) => setNewReminder(e.target.value)}
-                  placeholder="Ej: Revisar pronóstico para viaje..."
+                  placeholder="E.g.: Check forecast for trip..."
                   className="input"
                   onKeyPress={(e) => e.key === 'Enter' && addReminder()}
                 />
@@ -281,7 +281,7 @@ const CalendarComponent = ({ location, onNext }) => {
                   onClick={addReminder}
                   className="btn btn-primary"
                 >
-                  Agregar
+                  Add
                 </button>
                 <button
                   onClick={() => {
@@ -290,7 +290,7 @@ const CalendarComponent = ({ location, onNext }) => {
                   }}
                   className="btn btn-outline"
                 >
-                  Cancelar
+                  Cancel
                 </button>
               </div>
               </div>
@@ -300,9 +300,9 @@ const CalendarComponent = ({ location, onNext }) => {
 
         <div className="reminders-sidebar">
           <div className="upcoming-reminders">
-            <h3>
+              <h3>
               <FiClock className="header-icon" />
-              Próximos Recordatorios
+              Upcoming Reminders
             </h3>
             {upcomingReminders.length > 0 ? (
               <div className="reminders-list">
@@ -313,7 +313,7 @@ const CalendarComponent = ({ location, onNext }) => {
                   >
                     <div className="reminder-content">
                       <div className="reminder-date">
-                        {format(reminder.date, 'dd/MM', { locale: es })}
+                        {format(reminder.date, 'dd/MM', { locale: enUS })}
                       </div>
                       <div className="reminder-text">
                         {reminder.text}
@@ -340,14 +340,14 @@ const CalendarComponent = ({ location, onNext }) => {
                 ))}
               </div>
             ) : (
-              <p className="no-reminders">No hay recordatorios próximos</p>
+                <p className="no-reminders">No upcoming reminders</p>
             )}
           </div>
 
           {selectedDateReminders.length > 0 && (
             <div className="selected-date-reminders">
-              <h4>
-                Recordatorios para {format(selectedDate, 'dd/MM/yyyy', { locale: es })}
+                <h4>
+                Reminders for {format(selectedDate, 'dd/MM/yyyy', { locale: enUS })}
               </h4>
               <div className="reminders-list">
                 {selectedDateReminders.map(reminder => (

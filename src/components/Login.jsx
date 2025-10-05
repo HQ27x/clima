@@ -142,13 +142,13 @@ const Login = ({ onLogin }) => {
       <div className="login-card">
         <div className="login-header">
           <h1>Alertify</h1>
-          <p>Accede a información meteorológica precisa</p>
+          <p>Access accurate weather information</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
           {!isLogin && (
             <div className="form-group">
-              <label htmlFor="name">Nombre completo</label>
+              <label htmlFor="name">Full name</label>
               <div className="input-group">
                 <FiUser className="input-icon" />
                 <input
@@ -156,7 +156,7 @@ const Login = ({ onLogin }) => {
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Tu nombre completo"
+                  placeholder="Your full name"
                   required={!isLogin}
                   className="input"
                 />
@@ -165,7 +165,7 @@ const Login = ({ onLogin }) => {
           )}
 
           <div className="form-group">
-            <label htmlFor="email">Correo electrónico</label>
+            <label htmlFor="email">Email</label>
             <div className="input-group">
               <FiMail className="input-icon" />
               <input
@@ -173,7 +173,7 @@ const Login = ({ onLogin }) => {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="correo@email.com"
+                placeholder="you@example.com"
                 required
                 className="input"
               />
@@ -181,7 +181,7 @@ const Login = ({ onLogin }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Contraseña</label>
+            <label htmlFor="password">Password</label>
             <div className="input-group">
               <FiLock className="input-icon" />
               <input
@@ -205,7 +205,7 @@ const Login = ({ onLogin }) => {
 
           {!isLogin && (
             <div className="form-group">
-              <label htmlFor="gender">Sexo</label>
+              <label htmlFor="gender">Gender</label>
               <div className="input-group">
                 <FiUserCheck className="input-icon" />
                 <select
@@ -215,11 +215,11 @@ const Login = ({ onLogin }) => {
                   required={!isLogin}
                   className="input select-input"
                 >
-                  <option value="">Selecciona tu sexo</option>
-                  <option value="masculino">Masculino</option>
-                  <option value="femenino">Femenino</option>
-                  <option value="otro">Otro</option>
-                  <option value="prefiero-no-decir">Prefiero no decir</option>
+                  <option value="">Select your gender</option>
+                  <option value="masculino">Male</option>
+                  <option value="femenino">Female</option>
+                  <option value="otro">Other</option>
+                  <option value="prefiero-no-decir">Prefer not to say</option>
                 </select>
               </div>
             </div>
@@ -232,7 +232,7 @@ const Login = ({ onLogin }) => {
             disabled={loading}
             className="btn btn-primary login-btn"
           >
-            {loading ? 'Cargando...' : (isLogin ? 'Iniciar Sesión' : 'Registrarse')}
+            {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Register')}
           </button>
           {isLogin && (
             <div style={{marginTop:8, display:'flex', justifyContent:'center'}}>
@@ -242,7 +242,7 @@ const Login = ({ onLogin }) => {
                 disabled={loading}
                 className="guest-btn"
               >
-                Iniciar sesión sin cuenta
+                Sign in as guest
               </button>
             </div>
           )}
@@ -250,13 +250,13 @@ const Login = ({ onLogin }) => {
 
         <div className="login-footer">
           <p>
-            {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
+            {isLogin ? "Don't have an account?" : 'Already have an account?'}
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
               className="link-button"
             >
-              {isLogin ? 'Regístrate' : 'Inicia sesión'}
+              {isLogin ? 'Register' : 'Sign in'}
             </button>
           </p>
         </div>
