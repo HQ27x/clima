@@ -275,12 +275,25 @@
   letter-spacing: 0.5px;
 }
 
+.author-post-count {
+  background: var(--hover);
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--textSecondary);
+}
+
 .post-meta {
   display: flex;
   flex-direction: column;
   gap: 4px;
   align-items: flex-end;
   text-align: right;
+}
+
+.post-comments-count {
+  color: var(--textSecondary);
+  font-size: 0.85rem;
 }
 
 .post-location,
@@ -332,6 +345,16 @@
   color: var(--text);
 }
 
+.action-btn.acted {
+  background-color: var(--primary);
+  color: white;
+}
+
+.action-btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .like-btn:hover {
   color: var(--error);
   background-color: var(--hover);
@@ -349,6 +372,57 @@
 
 .action-icon {
   font-size: 0.9rem;
+}
+
+/* Thread (comments) styles */
+.thread-section {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid var(--border);
+}
+.thread-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.thread-comments {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow: auto;
+  padding-bottom: 8px;
+}
+.thread-comment {
+  padding: 10px;
+  border-radius: 8px;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+}
+.comment-author {
+  font-size: 0.85rem;
+  color: var(--textSecondary);
+  margin-bottom: 6px;
+}
+.comment-body {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.comment-form textarea {
+  width: 100%;
+  min-height: 60px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  resize: vertical;
+  background: var(--card);
+  color: var(--text);
+}
+.comment-form .btn {
+  height: 40px;
 }
 
 .no-posts {

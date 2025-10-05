@@ -21,15 +21,7 @@ export async function seedFirestoreSample() {
       results.created.push({ collection: 'users', id: u.id });
     }
 
-    // Create sample posts
-    const posts = [
-      { authorId: 'admin', content: 'Bienvenidos al foro de Alertify', likesCount: 0, starsCount: 0 },
-      { authorId: 'usuario', content: '¿Alguien sabe cómo interpretar el índice UV?', likesCount: 2, starsCount: 1 }
-    ];
-    for (const p of posts) {
-      const r = await addDoc(collection(db, 'posts'), { ...p, createdAt: serverTimestamp() });
-      results.created.push({ collection: 'posts', id: r.id });
-    }
+    // Sample posts creation removed — no posts will be seeded by default.
 
     // Create sample feedbacks
     const feedbacks = [

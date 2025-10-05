@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FiStar, FiMessageCircle, FiHeart, FiFlag, FiSend, FiAward, FiUsers, FiMapPin, FiCalendar } from 'react-icons/fi';
-import { collection, addDoc, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { collection, addDoc, getDocs, query, orderBy, limit, where, doc, getDoc, onSnapshot, serverTimestamp, runTransaction, increment, updateDoc, setDoc } from 'firebase/firestore';
+import { db, auth } from '../firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
 import './Forum.css';
 
 const Forum = () => {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('all');
   const [loading, setLoading] = useState(false);
   const [userStars, setUserStars] = useState(0);
+  const [firebaseUser, setFirebaseUser] = useState(null);
+  const [profileName, setProfileName] = useState(null);
   const [showNewPost, setShowNewPost] = useState(false);
   const [likedPosts, setLikedPosts] = useState(new Set());
   const [starredPosts, setStarredPosts] = useState(new Set());
@@ -18,75 +20,117 @@ const Forum = () => {
   useEffect(() => {
     const loadPosts = async () => {
       try {
-        let q = query(
+        const q = query(
           collection(db, 'forum_posts'),
           orderBy('timestamp', 'desc'),
           limit(20)
         );
 
-        if (selectedLocation !== 'all') {
-          q = query(
-            collection(db, 'forum_posts'),
-            where('location', '==', selectedLocation),
-            orderBy('timestamp', 'desc'),
-            limit(20)
-          );
-        }
-
         const querySnapshot = await getDocs(q);
-        const postsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-          // load offline (temporarily saved) posts from localStorage and prepend them
-          try{
-            const raw = localStorage.getItem('forum_offline_posts');
-            if(raw){
-              const offline = JSON.parse(raw);
-              if(Array.isArray(offline) && offline.length){
-                // offline posts should appear first
-                setPosts([...offline, ...postsData]);
-                return;
-              }
-            }
-          }catch(_){ /* ignore parse errors */ }
+        let postsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // fetch comment counts and authorStars for each post (parallel)
+        try{
+          const withCounts = await Promise.all(postsData.map(async (p)=>{
+            try{
+              const cs = await getDocs(collection(db, 'forum_posts', p.id, 'comments'));
+              return { ...p, commentCount: cs.size };
+            }catch(e){ return { ...p, commentCount: 0 }; }
+          }));
+          postsData = withCounts;
+        }catch(_){ /* ignore failures */ }
 
-          setPosts(postsData);
+        // compute author post counts and fetch authorStars from users collection
+        try{
+          const authorIds = Array.from(new Set(postsData.map(p=>p.authorId).filter(Boolean)));
+          const countsByAuthor = {};
+          for(const id of authorIds){ countsByAuthor[id] = postsData.filter(p=>p.authorId===id).length; }
+          // fetch user docs for authorStars
+          const authorDocs = await Promise.all(authorIds.map(id => getDoc(doc(db, 'users', id)).catch(()=>null)));
+          const starsByAuthor = {};
+          authorDocs.forEach((d, i)=>{ const id = authorIds[i]; starsByAuthor[id] = (d && d.exists() && d.data().stars) ? d.data().stars : 0; });
+          postsData = postsData.map(p=>({ ...p, authorStars: starsByAuthor[p.authorId] || 0, authorPostCount: countsByAuthor[p.authorId] || 0 }));
+        }catch(_){ /* ignore */ }
+        setPosts(postsData);
+        // if user is logged, fetch their action (like/star) for each post
+        if (firebaseUser && firebaseUser.uid) {
+          try{
+            const actions = {};
+            await Promise.all(postsData.map(async (p)=>{
+              try{
+                const aDoc = await getDoc(doc(db, 'forum_posts', p.id, 'actions', firebaseUser.uid));
+                if (aDoc && aDoc.exists()) actions[p.id] = aDoc.data().type;
+              }catch(_){ }
+            }));
+            setUserActions(actions);
+          }catch(_){ }
+        } else {
+          setUserActions({});
+        }
       } catch (error) {
         console.error('Error cargando posts:', error);
       }
     };
 
     loadPosts();
-  }, [selectedLocation]);
+  }, [firebaseUser]);
 
-  // load liked/starred from localStorage
+  // liked/starred state will not be persisted to localStorage to avoid storing post records in code
   useEffect(()=>{
-    try{
-      const rawLiked = localStorage.getItem('forum_liked_posts');
-      const rawStar = localStorage.getItem('forum_starred_posts');
-      setLikedPosts(new Set(rawLiked ? JSON.parse(rawLiked) : []));
-      setStarredPosts(new Set(rawStar ? JSON.parse(rawStar) : []));
-    }catch(e){ /* ignore */ }
+    setLikedPosts(new Set());
+    setStarredPosts(new Set());
   }, []);
 
   // Cargar estrellas del usuario (simulado)
+  // Remove simulated default stars; real value will be loaded from Firestore profile in auth listener
+
+  // Escuchar auth state y cargar perfil de Firestore si existe
   useEffect(() => {
-    // En una app real, esto vendría de la base de datos del usuario
-    setUserStars(12); // Simular 12 estrellas
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      setFirebaseUser(user);
+      if (user && user.uid) {
+        try {
+          const pDoc = await getDoc(doc(db, 'users', user.uid));
+          if (pDoc.exists()) {
+            const pd = pDoc.data();
+            setProfileName(pd.displayName || pd.name || user.email || 'Usuario');
+            setUserStars(pd.stars || 0);
+          } else {
+            // user exists in Auth but not in Firestore - treat as unregistered for posting
+            setProfileName(null);
+            setUserStars(0);
+          }
+        } catch (e) {
+          console.error('Error cargando perfil de usuario:', e);
+          setProfileName(null);
+        }
+      } else {
+        setProfileName(null);
+        setUserStars(0);
+      }
+    });
+    return () => unsub();
   }, []);
 
   // Enviar nuevo post
   const handleSubmitPost = async (e) => {
     e.preventDefault();
     if (!newPost.trim()) return;
+    // require registered user with profile
+    if (!firebaseUser || !profileName) {
+      if (typeof window !== 'undefined') {
+        window.alert('Debes iniciar sesión con una cuenta registrada para crear posts. Serás redirigido al inicio de sesión.');
+        window.location.replace('/login');
+      }
+      return;
+    }
 
     setLoading(true);
     try {
       const postData = {
         content: newPost.trim(),
-        author: 'Usuario Anónimo', // En una app real, usar el usuario autenticado
-        location: selectedLocation === 'all' ? 'General' : selectedLocation,
+        author: profileName || 'Usuario', // store logged user name
+        authorId: firebaseUser ? firebaseUser.uid : null,
+        location: 'General',
         stars: 0,
         likes: 0,
         timestamp: new Date(),
@@ -111,30 +155,9 @@ const Forum = () => {
         setNewPost('');
         setShowNewPost(false);
       }catch(firebaseErr){
-        // If sending to Firebase fails, save locally (temporary) so user doesn't lose content
+        // If sending to Firebase fails, show an error but do NOT persist posts locally
         console.error('Firebase error while posting:', firebaseErr);
-        try{
-          const localPost = {
-            id: `local-${Date.now()}`,
-            ...postData,
-            offline: true
-          };
-          // prepend to UI (replace temp)
-          setPosts(prev => [localPost, ...(prev ? prev.filter(p=>p.id !== tempPost.id) : [])]);
-          // persist to localStorage
-          const raw = localStorage.getItem('forum_offline_posts');
-          let arr = [];
-          try{ arr = raw ? JSON.parse(raw) : []; }catch(_){ arr = []; }
-          arr.unshift(localPost);
-          localStorage.setItem('forum_offline_posts', JSON.stringify(arr));
-
-          setNewPost('');
-          setShowNewPost(false);
-          alert('No se pudo publicar en el servidor. Tu post se guardó localmente y aparecerá en la lista.');
-        }catch(err){
-          console.error('Error guardando localmente:', err);
-          alert('Error al enviar post. Inténtalo de nuevo.');
-        }
+        alert('No se pudo publicar en el servidor. Inténtalo de nuevo.');
       }
     } catch (error) {
       console.error('Error enviando post (outer):', error);
@@ -144,40 +167,80 @@ const Forum = () => {
     }
   };
 
-  // Dar like a un post
-  const handleLike = async (postId) => {
-    // Allow only one like per user per post (tracked locally)
-    if(!postId) return;
-    if(likedPosts.has(postId)) return; // already liked
-    // update UI
-    setPosts(prev => prev.map(post => post.id === postId ? { ...post, likes: (post.likes || 0) + 1 } : post));
-    const next = new Set(likedPosts);
-    next.add(postId);
-    setLikedPosts(next);
-    try{ localStorage.setItem('forum_liked_posts', JSON.stringify(Array.from(next))); }catch(_){ }
+  // Handle action (like or star) - only one action per user per post, cannot do both
+  const handleAction = async (post, type) => {
+    if (!post || !type) return;
+    if (!firebaseUser || !firebaseUser.uid || !profileName) {
+      window.alert('Debes iniciar sesión para realizar esta acción.');
+      window.location.replace('/login');
+      return;
+    }
+    const uid = firebaseUser.uid;
+    // prevent if user already performed an action
+    if (userActions[post.id]) {
+      alert('Ya realizaste una acción en este post');
+      return;
+    }
+    const actionRef = doc(db, 'forum_posts', post.id, 'actions', uid);
+    const postRef = doc(db, 'forum_posts', post.id);
+    try{
+      await runTransaction(db, async (tx) => {
+        const actionSnap = await tx.get(actionRef);
+        if (actionSnap.exists()) throw new Error('Ya realizaste una acción en este post');
+        const postSnap = await tx.get(postRef);
+        if (!postSnap.exists()) throw new Error('Post no encontrado');
+        // increment post counter
+        if (type === 'like') {
+          tx.update(postRef, { likes: increment(1) });
+        } else if (type === 'star') {
+          tx.update(postRef, { stars: increment(1) });
+        }
+        // increment author reputation (user stars)
+        const authorId = postSnap.data().authorId;
+        if (authorId) {
+          const userRef = doc(db, 'users', authorId);
+          const points = 1; // both like and star give 1 point
+          tx.update(userRef, { stars: increment(points) });
+        }
+        // record user's action
+        tx.set(actionRef, { type, timestamp: serverTimestamp(), userId: uid });
+      });
+      // reflect in UI
+      setUserActions(prev => ({ ...prev, [post.id]: type }));
+      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, likes: (p.likes || 0) + (type === 'like' ? 1 : 0), stars: (p.stars || 0) + (type === 'star' ? 1 : 0) } : p));
+      // also update authorStars displayed for all posts by that author
+      try{
+  const points = 1;
+        if(post.authorId){
+          setPosts(prev => prev.map(p => p.authorId === post.authorId ? { ...p, authorStars: (p.authorStars || 0) + points } : p));
+        }
+      }catch(_){ }
+    }catch(err){
+      console.error('Action error', err);
+      if(err.message && err.message.includes('Ya realizaste')) alert('Ya realizaste una acción en este post'); else alert('No se pudo realizar la acción');
+    }
   };
 
-  // Dar estrella a un post
-  const handleStar = async (postId) => {
-    if(!postId) return;
-    if(starredPosts.has(postId)) return; // already starred
-    setPosts(prev => prev.map(post => post.id === postId ? { ...post, stars: (post.stars || 0) + 1 } : post));
-    const next = new Set(starredPosts);
-    next.add(postId);
-    setStarredPosts(next);
-    try{ localStorage.setItem('forum_starred_posts', JSON.stringify(Array.from(next))); }catch(_){ }
-  };
-
-  // Obtener nivel de credibilidad basado en estrellas
+  // Obtener nivel de credibilidad basado en estrellas (rangos solicitados)
   const getCredibilityLevel = (stars) => {
-    if (stars >= 50) return { level: 'Experto', color: '#8B5CF6' };
-    if (stars >= 25) return { level: 'Avanzado', color: '#10B981' };
-    if (stars >= 10) return { level: 'Intermedio', color: '#F59E0B' };
+    const s = Number(stars || 0);
+    if (s >= 201) return { level: 'Experto', color: '#8B5CF6' };
+    if (s >= 101) return { level: 'Avanzado', color: '#10B981' };
+    if (s >= 51) return { level: 'Intermedio', color: '#F59E0B' };
     return { level: 'Principiante', color: '#6B7280' };
   };
 
   const credibility = getCredibilityLevel(userStars);
   const [feedbacks, setFeedbacks] = useState([]);
+  const [activeUsersCount, setActiveUsersCount] = useState(null);
+  const [verifiedExpertsCount, setVerifiedExpertsCount] = useState(null);
+  // Thread (comments) state
+  const [openPost, setOpenPost] = useState(null);
+  const [threadComments, setThreadComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const commentsUnsubRef = useRef(null);
+  const [userActions, setUserActions] = useState({}); // { postId: 'like'|'star' }
 
   // load recent feedbacks from backend Foro (if running)
   useEffect(()=>{
@@ -191,6 +254,52 @@ const Forum = () => {
       }catch(e){ /* ignore if backend not running */ }
     };
     load();
+  }, []);
+
+  // Load forum stats: active users and verified experts
+  useEffect(() => {
+    let mounted = true;
+    const loadStats = async () => {
+      try {
+        // try to compute active users as users with lastActive within 30 days if that field exists
+        const usersSnap = await getDocs(collection(db, 'users'));
+        if (!mounted) return;
+        const now = new Date();
+        const THIRTY_DAYS = 1000 * 60 * 60 * 24 * 30;
+        let activeCount = 0;
+        let verifiedCount = 0;
+        usersSnap.forEach(u => {
+          const d = u.data() || {};
+          // active if lastActive is recent (Timestamp or Date)
+          const la = d.lastActive;
+          if (la) {
+            let last = la;
+            if (typeof la.toDate === 'function') last = la.toDate();
+            if (last instanceof Date && (now - last) <= THIRTY_DAYS) activeCount += 1;
+          }
+          // fallback: count users with a non-empty displayName as active when no lastActive exists
+          else if (d.displayName) activeCount += 1;
+
+          // verified experts: prefer explicit flag, or role === 'expert', or stars >= 201
+          if (d.verified === true || d.role === 'expert' || (typeof d.stars === 'number' && d.stars >= 201)) verifiedCount += 1;
+        });
+
+        // if there were no users with lastActive and activeCount seems too high due to fallback, clamp to usersSnap.size
+        if (mounted) {
+          setActiveUsersCount(activeCount || usersSnap.size || 0);
+          setVerifiedExpertsCount(verifiedCount || 0);
+        }
+      } catch (e) {
+        console.error('Error loading forum stats:', e);
+        if (mounted) {
+          // fallbacks
+          setActiveUsersCount(0);
+          setVerifiedExpertsCount(0);
+        }
+      }
+    };
+    loadStats();
+    return () => { mounted = false; };
   }, []);
 
   function formatTimestamp(ts){
@@ -213,6 +322,67 @@ const Forum = () => {
     return Promise.race([promise.then((res)=>{ clearTimeout(timeoutId); return res; }), timeout]);
   }
 
+  // Open a thread (subscribe to comments subcollection)
+  const openThread = (post) => {
+    // close previous
+    if (commentsUnsubRef.current) {
+      try{ commentsUnsubRef.current(); }catch(_){ }
+      commentsUnsubRef.current = null;
+    }
+    setOpenPost(post);
+    setThreadComments([]);
+    setCommentsLoading(true);
+    try{
+      const commentsCol = collection(db, 'forum_posts', post.id, 'comments');
+      const q = query(commentsCol, orderBy('timestamp', 'asc'));
+      const unsub = onSnapshot(q, (snap) => {
+        const arr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        setThreadComments(arr);
+        setCommentsLoading(false);
+      }, (err) => {
+        console.error('comments snapshot error', err);
+        setCommentsLoading(false);
+      });
+      commentsUnsubRef.current = unsub;
+    }catch(e){ console.error('Error subscribing to comments', e); setCommentsLoading(false); }
+  };
+
+  const closeThread = () => {
+    if (commentsUnsubRef.current) {
+      try{ commentsUnsubRef.current(); }catch(_){ }
+      commentsUnsubRef.current = null;
+    }
+    setOpenPost(null);
+    setThreadComments([]);
+    setNewComment('');
+  };
+
+  const handleSubmitComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim() || !openPost) return;
+    // require registered user with profile
+    if (!firebaseUser || !profileName) {
+      if (typeof window !== 'undefined') {
+        window.alert('Debes iniciar sesión con una cuenta registrada para comentar. Serás redirigido al inicio de sesión.');
+        window.location.replace('/login');
+      }
+      return;
+    }
+    try{
+      const commentsCol = collection(db, 'forum_posts', openPost.id, 'comments');
+      await addDoc(commentsCol, {
+        body: newComment.trim(),
+        author: profileName || 'Usuario',
+        timestamp: serverTimestamp(),
+        userAgent: navigator.userAgent
+      });
+      setNewComment('');
+    }catch(err){
+      console.error('Error adding comment', err);
+      alert('No se pudo enviar el comentario. Inténtalo de nuevo.');
+    }
+  };
+
   return (
     <div className="step-container">
       <div className="step-header">
@@ -230,7 +400,7 @@ const Forum = () => {
               <FiUsers />
             </div>
             <div className="user-details">
-              <h3>Tu Perfil</h3>
+                <h3>{profileName ?? 'Tu Perfil'}</h3>
               <div className="user-stars">
                 <FiStar className="star-icon" />
                 <span className="star-count">{userStars}</span>
@@ -244,7 +414,18 @@ const Forum = () => {
           
           <div className="user-actions">
             <button
-              onClick={() => setShowNewPost(!showNewPost)}
+              onClick={async () => {
+                // Only allow registered users (must have Firestore profile) to create posts
+                if (!firebaseUser || !profileName) {
+                  // redirect to login or show message
+                  if (typeof window !== 'undefined') {
+                    window.alert('Debes iniciar sesión con una cuenta registrada para crear posts. Serás redirigido al inicio de sesión.');
+                    window.location.replace('/login');
+                  }
+                  return;
+                }
+                setShowNewPost(!showNewPost);
+              }}
               className="btn btn-primary new-post-btn"
             >
               <FiMessageCircle className="btn-icon" />
@@ -253,37 +434,7 @@ const Forum = () => {
           </div>
         </div>
 
-        {/* Filtros */}
-        <div className="filters-section">
-          <h3>Filtrar por ubicación:</h3>
-          <div className="location-filters">
-            <button
-              onClick={() => setSelectedLocation('all')}
-              className={`filter-btn ${selectedLocation === 'all' ? 'active' : ''}`}
-            >
-              <FiMapPin className="filter-icon" />
-              Todas las ubicaciones
-            </button>
-            <button
-              onClick={() => setSelectedLocation('Ciudad de México')}
-              className={`filter-btn ${selectedLocation === 'Ciudad de México' ? 'active' : ''}`}
-            >
-              Ciudad de México
-            </button>
-            <button
-              onClick={() => setSelectedLocation('Guadalajara')}
-              className={`filter-btn ${selectedLocation === 'Guadalajara' ? 'active' : ''}`}
-            >
-              Guadalajara
-            </button>
-            <button
-              onClick={() => setSelectedLocation('Monterrey')}
-              className={`filter-btn ${selectedLocation === 'Monterrey' ? 'active' : ''}`}
-            >
-              Monterrey
-            </button>
-          </div>
-        </div>
+        {/* Filters removed per request */}
 
         {/* Formulario de nuevo post */}
         {showNewPost && (
@@ -342,8 +493,11 @@ const Forum = () => {
                         </div>
                         <div className="author-info">
                           <div className="author-name">{post.author}</div>
-                          <div className="author-level" style={{ color: postCredibility.color }}>
-                            {postCredibility.level}
+                          <div style={{display:'flex',alignItems:'center',gap:8}}>
+                            <div className="author-post-count">{post.authorPostCount || 0} foros</div>
+                            <div className="author-level" style={{ color: postCredibility.color }}>
+                              {postCredibility.level}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -356,6 +510,9 @@ const Forum = () => {
                           <FiCalendar className="meta-icon" />
                           {formatTimestamp(post.timestamp)}
                         </div>
+                          <div className="post-comments-count">
+                            {typeof post.commentCount === 'number' ? `${post.commentCount} comentarios` : ''}
+                          </div>
                       </div>
                     </div>
                     
@@ -365,15 +522,17 @@ const Forum = () => {
                     
                     <div className="post-actions">
                       <button
-                        onClick={() => handleLike(post.id)}
-                        className="action-btn like-btn"
+                        onClick={() => handleAction(post, 'like')}
+                        className={`action-btn like-btn ${userActions[post.id] === 'like' ? 'acted' : ''}`}
+                        disabled={!!userActions[post.id]}
                       >
                         <FiHeart className="action-icon" />
                         {post.likes || 0}
                       </button>
                       <button
-                        onClick={() => handleStar(post.id)}
-                        className="action-btn star-btn"
+                        onClick={() => handleAction(post, 'star')}
+                        className={`action-btn star-btn ${userActions[post.id] === 'star' ? 'acted' : ''}`}
+                        disabled={!!userActions[post.id]}
                       >
                         <FiStar className="action-icon" />
                         {post.stars || 0}
@@ -382,7 +541,41 @@ const Forum = () => {
                         <FiFlag className="action-icon" />
                         Reportar
                       </button>
+                      <button
+                        onClick={() => openThread(post)}
+                        className="action-btn thread-btn"
+                      >
+                        Abrir hilo
+                      </button>
                     </div>
+                    {/* Thread view */}
+                    {openPost && openPost.id === post.id && (
+                      <div className="thread-section">
+                        <div className="thread-header">
+                          <strong>Hilo: {post.content.substring(0, 80)}</strong>
+                          <button onClick={closeThread} className="btn btn-outline">Cerrar hilo</button>
+                        </div>
+                        <div className="thread-comments">
+                          {commentsLoading ? <div>Cargando comentarios...</div> : (
+                            threadComments.length ? (
+                              threadComments.map(c => (
+                                <div key={c.id} className="thread-comment">
+                                  <div className="comment-author"><strong>{c.author}</strong> · <span className="comment-date">{formatTimestamp(c.timestamp)}</span></div>
+                                  <div className="comment-body">{c.body}</div>
+                                </div>
+                              ))
+                            ) : <div>No hay comentarios aún</div>
+                          )}
+                        </div>
+                        <form className="comment-form" onSubmit={handleSubmitComment}>
+                          <textarea value={newComment} onChange={(e)=>setNewComment(e.target.value)} placeholder="Escribe un comentario..." rows={2} required />
+                          <div style={{display:'flex',gap:8,marginTop:8}}>
+                            <button type="submit" className="btn btn-primary">Comentar</button>
+                            <button type="button" onClick={closeThread} className="btn btn-outline">Cancelar</button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -428,7 +621,7 @@ const Forum = () => {
           <div className="stat-item">
             <FiUsers className="stat-icon" />
             <div>
-              <div className="stat-number">1,234</div>
+              <div className="stat-number">{activeUsersCount === null ? '—' : activeUsersCount.toLocaleString()}</div>
               <div className="stat-label">Usuarios activos</div>
             </div>
           </div>
@@ -442,7 +635,7 @@ const Forum = () => {
           <div className="stat-item">
             <FiAward className="stat-icon" />
             <div>
-              <div className="stat-number">89</div>
+              <div className="stat-number">{verifiedExpertsCount === null ? '—' : verifiedExpertsCount.toLocaleString()}</div>
               <div className="stat-label">Expertos verificados</div>
             </div>
           </div>
