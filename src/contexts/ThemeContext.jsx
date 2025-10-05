@@ -20,23 +20,23 @@ export const ThemeProvider = ({ children }) => {
   const colorPalettes = {
     dark: {
       // Colores base azul vintage
-      primary: '#4A90E2',      // Azul vintage
-      secondary: '#7BB3F0',    // Azul claro vintage
-      accent: '#B8D4F0',       // Azul muy claro vintage
-      background: '#0F1419',   // Azul muy oscuro vintage
-      surface: '#1A2332',      // Azul gris oscuro vintage
+      primary: '#5b7c99',      // Azul acero vintage
+      secondary: '#7d9bb5',    // Azul niebla
+      accent: '#4A90E2',       // Azul vintage vibrante
+      background: '#1a2332',   // Azul marino profundo
+      surface: '#243447',      // Azul slate medio
 
       // Texto para modo oscuro (azul claro y tonos fríos)
-      textPrimary: '#E8F4FD',         // Azul muy claro para textos principales
+      textPrimary: '#e8eef5',         // Blanco azulado suave
       textSecondary: '#B8D4F0',       // Azul claro para textos secundarios
       textTertiary: '#8BB3D9',        // Azul medio para textos menos importantes
 
       // Colores del clima vintage
-      sunny: '#FFD700',        // Dorado para sol
-      cloudy: '#B0C4DE',       // Azul gris claro para nubes
-      rainy: '#4682B4',        // Azul acero para lluvia
+      sunny: '#f5b342',        // Dorado
+      cloudy: '#94a3b8',       // Gris azulado
+      rainy: '#6b8caf',        // Azul agua
       stormy: '#6A5ACD',       // Púrpura lavanda para tormentas
-      snowy: '#F0F8FF',        // Azul blanco para nieve
+      snowy: '#d4e4f7',        // Azul hielo claro
       foggy: '#C0C0C0',        // Gris plata para niebla
 
       // Estados vintage
@@ -46,31 +46,31 @@ export const ThemeProvider = ({ children }) => {
       info: '#87CEEB',         // Azul cielo
 
       // Transparencias
-      overlay: 'rgba(15, 20, 25, 0.95)',
-      card: 'rgba(232, 244, 253, 0.08)',
-      border: 'rgba(232, 244, 253, 0.15)',
-      hover: 'rgba(232, 244, 253, 0.12)',
+      overlay: 'rgba(26, 35, 50, 0.95)',
+      card: 'rgba(45, 63, 90, 0.4)',
+      border: 'rgba(232, 238, 245, 0.15)',
+      hover: 'rgba(232, 238, 245, 0.12)',
       buttonText: '#FFFFFF'     // Texto blanco para botones
     },
     light: {
-      // Colores base vintage
-      primary: '#8B5A3C',      // Marrón vintage
-      secondary: '#A67C52',    // Marrón dorado
-      accent: '#D4AF37',       // Dorado vintage
-      background: '#FDF5E6',   // Beige muy claro vintage
-      surface: '#FFF8DC',      // Beige crema
+      // Colores base amarillo vibrante
+      primary: '#ffb300',      // Mostaza vibrante
+      secondary: '#ffd54f',    // Amarillo dorado
+      accent: '#ffc93c',       // Amarillo sol
+      background: '#fffbf0',   // Amarillo muy claro, casi blanco
+      surface: '#fff4d9',      // Amarillo mantequilla suave
 
-      // Texto para modo claro (marrón y grises oscuros)
-      textPrimary: '#2F2F2F',         // Gris muy oscuro para texto principal
+      // Texto para modo claro (gris oscuro cálido)
+      textPrimary: '#2d2a1f',         // Gris carbón cálido
       textSecondary: '#5D4E37',       // Marrón oscuro para texto secundario
       textTertiary: '#8B7355',        // Marrón medio
 
       // Colores del clima vintage
-      sunny: '#DAA520',        // Dorado oscuro para sol
+      sunny: '#ffa500',        // Naranja dorado para sol
       cloudy: '#708090',       // Azul gris para nubes
       rainy: '#4682B4',        // Azul acero para lluvia
       stormy: '#6A5ACD',       // Púrpura lavanda para tormentas
-      snowy: '#F0F8FF',        // Azul blanco para nieve
+      snowy: '#87CEEB',        // Azul cielo para nieve
       foggy: '#A9A9A9',        // Gris oscuro para niebla
 
       // Estados vintage
@@ -80,11 +80,11 @@ export const ThemeProvider = ({ children }) => {
       info: '#4682B4',         // Azul acero
 
       // Transparencias
-      overlay: 'rgba(253, 245, 230, 0.95)',
-      card: 'rgba(255, 248, 220, 0.7)',
-      border: 'rgba(139, 90, 60, 0.2)',
-      hover: 'rgba(139, 90, 60, 0.1)',
-      buttonText: '#FFFFFF'     // Texto blanco para botones
+      overlay: 'rgba(255, 251, 240, 0.95)',
+      card: 'rgba(255, 244, 217, 0.6)',
+      border: 'rgba(45, 42, 31, 0.15)',
+      hover: 'rgba(255, 179, 0, 0.1)',
+      buttonText: '#2d2a1f'     // Texto oscuro para botones
     }
   };
 
