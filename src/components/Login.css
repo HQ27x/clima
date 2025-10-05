@@ -104,11 +104,12 @@
   transition: all 0.3s ease;
 }
 
-.login-btn {
+.btn.btn-primary.login-btn {
   width: 100%;
   padding: 16px;
   font-size: 1.1rem;
   margin-top: 8px;
+  color: var(--buttonText) !important;
 }
 
 .login-btn:disabled {
@@ -187,7 +188,7 @@
 .demo-user-btn:hover {
   background-color: var(--primary);
   border-color: var(--primary);
-  color: var(--text);
+  color: var(--buttonText);
   transform: translateY(-1px);
 }
 
