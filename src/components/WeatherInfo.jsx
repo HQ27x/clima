@@ -127,12 +127,27 @@ const WeatherInfo = ({ location, onNext }) => {
           feelsLike: rawCur.feelsLike ?? rawCur.feels_like ?? rawCur.apparent_temperature ?? null,
           humidity: rawCur.humidity ?? rawCur.humidity_percent ?? rawCur.relative_humidity ?? null,
           windSpeed: normalizeWind(rawCur.windSpeed ?? rawCur.wind_speed ?? rawCur.wind_speed_ms ?? rawCur.wind_speed_kmh ?? null),
-          visibility: (typeof rawCur.visibility === 'number') ? (Math.round((rawCur.visibility || 0) / 1000)) : (rawCur.visibility_km ?? null),
+          // visibility from various providers may be in meters (e.g. OpenWeather: 10000)
+          // or already in kilometers (e.g. our local proxy maps to km). Handle both robustly:
+          visibility: (typeof rawCur.visibility === 'number')
+            ? (rawCur.visibility > 1000 ? Math.round(rawCur.visibility / 1000) : Math.round(rawCur.visibility))
+            : (rawCur.visibility_km ?? null),
           pressure: rawCur.pressure ?? rawCur.pressure_hpa ?? rawCur.pressure_kpa ?? null,
           description: rawCur.description ?? rawCur.condition ?? (rawCur.weather?.[0]?.description) ?? null,
           icon: rawCur.icon ?? rawCur.icon_code ?? null,
           uvIndex: rawCur.uvIndex ?? rawCur.uvi ?? rawCur.uv ?? null
         };
+
+        // Debug: if key fields are missing, log raw source to help diagnose mismatches
+        try {
+          const missing = [];
+          if (normalizedCurrent.visibility == null) missing.push('visibility');
+          if (normalizedCurrent.pressure == null) missing.push('pressure');
+          if (normalizedCurrent.uvIndex == null) missing.push('uvIndex');
+          if (missing.length > 0) {
+            console.warn('WeatherInfo: missing fields after normalization:', missing.join(', '), { raw: rawCur, modelSource, dataSample: data?.current });
+          }
+        } catch (e) { /* ignore logging errors */ }
 
         setWeatherData(normalizedCurrent);
 
@@ -155,15 +170,9 @@ const WeatherInfo = ({ location, onNext }) => {
         setForecast(normalized);
 
         // After we have forecast + current data, try to obtain a recommendation from Gemini
-        (async function callGemini() {
+        async function callGemini(summary) {
           try {
             // Build a concise summary for the PHP service to expand following its internal rules
-            const today = (normalized && normalized[0]) || {};
-            const cur = normalizedCurrent || {};
-            const uv = cur.uvIndex ?? cur.uvi ?? (data.current && (data.current.uvIndex ?? data.current.uvi)) ?? null;
-            const precipToday = (today && typeof today.precipitation === 'number' && today.precipitation > 0) ? 'lluvia esperada' : '';
-            const summary = `Condición actual: ${cur.description || 'N/D'}. Temp entre ${today.low ?? 'N/D'}°C y ${today.high ?? 'N/D'}°C. Humedad ${cur.humidity ?? 'N/D'}%. Viento ${cur.windSpeed ?? 'N/D'} km/h. UV ${uv ?? 'N/D'}. ${precipToday}`;
-
             setGeminiLoading(true);
             setGeminiError(null);
 
@@ -219,7 +228,15 @@ const WeatherInfo = ({ location, onNext }) => {
           } finally {
             setGeminiLoading(false);
           }
-        })();
+        }
+
+        // Build summary then call
+        const today = (normalized && normalized[0]) || {};
+        const cur = normalizedCurrent || {};
+        const uv = cur.uvIndex ?? cur.uvi ?? (data.current && (data.current.uvIndex ?? data.current.uvi)) ?? null;
+        const precipToday = (today && typeof today.precipitation === 'number' && today.precipitation > 0) ? 'lluvia esperada' : '';
+        const builtSummary = `Condición actual: ${cur.description || 'N/D'}. Temp entre ${today.low ?? 'N/D'}°C y ${today.high ?? 'N/D'}°C. Humedad ${cur.humidity ?? 'N/D'}%. Viento ${cur.windSpeed ?? 'N/D'} km/h. UV ${uv ?? 'N/D'}. ${precipToday}`;
+        callGemini(builtSummary);
 
       }catch(err){
         if(!aborted) setError('Error al cargar datos del clima');
@@ -412,9 +429,24 @@ const WeatherInfo = ({ location, onNext }) => {
 
           <div className="gemini-recommendation">
             <h4>Recomendación IA</h4>
-            {geminiLoading && <p>Generando recomendación...</p>}
-            {geminiError && <p className="error-message">{geminiError}</p>}
-            {geminiRecommendation && <p>{geminiRecommendation}</p>}
+            <div className="gemini-card">
+              <div className="gemini-left">
+                <div style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8,background:'rgba(0,0,0,0.04)'}}>🤖</div>
+              </div>
+              <div className="gemini-right">
+                <div className="gemini-header">
+                  <div className="gemini-provider">{geminiLoading ? 'Generando...' : (geminiRecommendation ? 'Recomendación' : 'IA (local)')}</div>
+                  <div className="gemini-actions">
+                    {geminiLoading ? <div className="gemini-spinner" aria-hidden></div> : null}
+                  </div>
+                </div>
+                <div className="gemini-text">
+                  {geminiError && <div className="error-message">{geminiError}</div>}
+                  {!geminiError && !geminiRecommendation && !geminiLoading && <div className="gemini-text" style={{color:'var(--textSecondary)'}}>No hay recomendación aún. Se generará automáticamente al obtener datos del clima o puedes reintentar manualmente.</div>}
+                  {geminiRecommendation && <div>{geminiRecommendation}</div>}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

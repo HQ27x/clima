@@ -231,6 +231,57 @@
   transition: all 0.3s ease;
 }
 
+/* Gemini / IA recommendation card */
+.gemini-recommendation {
+  margin-top: 18px;
+}
+
+.gemini-card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+.gemini-left {
+  flex: 0 0 44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.gemini-right { flex: 1; }
+
+.gemini-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:8px;
+}
+
+.gemini-provider {
+  font-size: 0.8rem;
+  color: var(--textSecondary);
+  background: rgba(255,255,255,0.02);
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+.gemini-text { color: var(--text); font-size: 0.98rem; line-height:1.4; }
+
+.gemini-actions { display:flex; gap:8px; align-items:center; }
+
+.gemini-retry { display: none; }
+
+.gemini-spinner { width:18px; height:18px; border-radius:50%; border:2px solid rgba(255,255,255,0.08); border-top-color:var(--primary); animation:spin 1s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .alerts-section h3 {
   color: var(--text);
   font-size: 1.3rem;
