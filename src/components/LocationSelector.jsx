@@ -471,9 +471,10 @@ const LocationSelector = ({ onLocationSelect }) => {
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
             <button onClick={confirmLocation} className="btn btn-primary confirm-btn">Confirmar ubicación</button>
             {savedNotice && (
-              <div className="saved-notice" style={{marginTop:8,background:'#10B981',color:'white',padding:'6px 10px',borderRadius:6,fontSize:13,textAlign:'center'}}>
-                Ubicación guardada
-              </div>
+              <div className="alert-modal">
+    <FiCheck style={{marginRight:8, fontSize:20}} />
+    Ubicación guardada
+  </div>
             )}
           </div>
         </div>
