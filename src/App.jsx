@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase/config';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -10,6 +10,7 @@ import WeatherInfo from './components/WeatherInfo';
 import Feedback from './components/Feedback';
 import Forum from './components/Forum';
 import Navigation from './components/Navigation';
+import BottomNav from './components/BottomNav';
 import ThemeToggle from './components/ThemeToggle';
 import './App.css';
 
@@ -65,12 +66,18 @@ function App() {
     );
   }
 
+  const NavWrapper = () => {
+    const loc = useLocation();
+    if (loc.pathname === '/login') return null;
+    return <Navigation currentStep={currentStep} />;
+  };
+
   return (
     <ThemeProvider>
       <Router>
         <div className="app">
           {/* Dev seeding UI removed */}
-          <Navigation currentStep={currentStep} />
+          <NavWrapper />
           <main className="main-content">
             <Routes>
               <Route 
@@ -122,6 +129,7 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
+          <BottomNav />
         </div>
       </Router>
     </ThemeProvider>

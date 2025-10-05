@@ -103,6 +103,9 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .main-content {
+    padding-bottom: 72px; /* space for bottom nav */
+  }
   .step-title {
     font-size: 2rem;
   }

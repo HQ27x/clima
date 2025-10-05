@@ -8,7 +8,7 @@ import './Feedback.css';
 const Feedback = ({ location, onNext }) => {
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
-  const [feedbackType, setFeedbackType] = useState('positive');
+  // Removed self-classification by user; type will be inferred server-side or by moderators
   const [submitted, setSubmitted] = useState(false);
   const [recentFeedback, setRecentFeedback] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -125,7 +125,7 @@ const Feedback = ({ location, onNext }) => {
       const feedbackData = {
         rating,
         feedback: feedback.trim(),
-        type: feedbackType,
+        // type removed: classification should be done by terceros/moderation
         location: location?.name || cityName || 'Ubicación no especificada',
         city: cityName ?? null,
         coordinates: location ? { lat: location.lat, lng: location.lng } : null,
@@ -197,7 +197,7 @@ const Feedback = ({ location, onNext }) => {
       setSubmitted(true);
       setRating(0);
       setFeedback('');
-      setFeedbackType('positive');
+      // no-op: self type removed
       
       // onSnapshot listener will update recentFeedback automatically
       
@@ -307,27 +307,7 @@ const Feedback = ({ location, onNext }) => {
                 </div>
               </div>
 
-              <div className="feedback-type-section">
-                <label>Tipo de feedback:</label>
-                <div className="type-buttons">
-                  <button
-                    type="button"
-                    onClick={() => setFeedbackType('positive')}
-                    className={`type-btn ${feedbackType === 'positive' ? 'active' : ''}`}
-                  >
-                    <FiThumbsUp className="type-icon" />
-                    Positivo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFeedbackType('negative')}
-                    className={`type-btn ${feedbackType === 'negative' ? 'active' : ''}`}
-                  >
-                    <FiThumbsDown className="type-icon" />
-                    Sugerencia
-                  </button>
-                </div>
-              </div>
+              {/* Tipo de feedback removido: la evaluación la realiza otro usuario/moderación */}
 
               <div className="feedback-text-section">
                 <label htmlFor="feedback">Comentarios:</label>
@@ -395,13 +375,7 @@ const Feedback = ({ location, onNext }) => {
                         );
                       })}
                     </div>
-                    <div className="feedback-type">
-                      {item.type === 'positive' ? (
-                        <FiThumbsUp className="type-icon positive" />
-                      ) : (
-                        <FiThumbsDown className="type-icon negative" />
-                      )}
-                    </div>
+                    {/* Ocultamos icono de tipo ya que el usuario no se auto-clasifica */}
                   </div>
                   
                   <div className="feedback-content-text">
