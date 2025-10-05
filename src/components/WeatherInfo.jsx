@@ -40,41 +40,98 @@ const WeatherInfo = ({ location, onNext }) => {
 
       try{
         let data = null;
+        let dataSource = null; // local indicator used synchronously in this function
 
         // 1) try remote trained API (may be slow)
-        if(lat != null && lng != null){
-          try{
+        if (lat != null && lng != null) {
+          try {
             const fusionController = new AbortController();
-            const fusionTimeout = setTimeout(()=>fusionController.abort(), 35000);
+            const fusionTimeout = setTimeout(() => fusionController.abort(), 35000);
             const fusionUrl = `https://api-fusion-34si.onrender.com/predict/full?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`;
             const r = await fetch(fusionUrl, { signal: fusionController.signal });
             clearTimeout(fusionTimeout);
-            if(r.ok) { data = await r.json(); setModelSource('fusion'); }
-          }catch(err){ console.warn('Fusion API failed', err && err.message ? err.message : err); }
+            if (r.ok) {
+              data = await r.json();
+              dataSource = 'fusion';
+            } else {
+              console.warn('Fusion API responded non-ok', r.status);
+            }
+          } catch (err) {
+            console.warn('Fusion API failed', err && err.message ? err.message : err);
+          }
         }
 
         // 2) try local proxy
-        if(!data && lat != null && lng != null){
-          try{
+        if (!data && lat != null && lng != null) {
+          try {
             const localController = new AbortController();
-            const localTimeout = setTimeout(()=>localController.abort(), 20000);
+            const localTimeout = setTimeout(() => localController.abort(), 20000);
             const r2 = await fetch(`http://localhost:4003/weather?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`, { signal: localController.signal });
             clearTimeout(localTimeout);
-            if(r2.ok){ data = await r2.json(); setModelSource('local'); }
-          }catch(err){ console.warn('Local proxy failed', err && err.message ? err.message : err); }
+            if (r2.ok) {
+              data = await r2.json();
+              dataSource = 'local';
+            } else {
+              console.warn('Local proxy responded non-ok', r2.status);
+            }
+          } catch (err) {
+            console.warn('Local proxy failed', err && err.message ? err.message : err);
+          }
         }
 
-        // 3) fallback mock
-        if(!data){ setModelSource('mock'); data = {
-          current: { temperature:22, feelsLike:25, humidity:65, windSpeed:12, visibility:10, pressure:1013, description:'Parcialmente nublado', icon:'partly-cloudy', uvIndex:6 },
-          short_term_forecast_5_days: [
-            { day_name:'mañana', date: new Date(Date.now()+1*86400000).toISOString(), condition:'Soleado', temp_min_celsius:18, temp_max_celsius:26, humidity:60, wind_speed_ms:3 },
-            { day_name:'día2', date: new Date(Date.now()+2*86400000).toISOString(), condition:'Lluvia ligera', temp_min_celsius:16, temp_max_celsius:24, humidity:70, wind_speed_ms:4 },
-            { day_name:'día3', date: new Date(Date.now()+3*86400000).toISOString(), condition:'Nublado', temp_min_celsius:20, temp_max_celsius:28, humidity:65, wind_speed_ms:5 },
-            { day_name:'día4', date: new Date(Date.now()+4*86400000).toISOString(), condition:'Soleado', temp_min_celsius:22, temp_max_celsius:30, humidity:50, wind_speed_ms:3 },
-            { day_name:'día5', date: new Date(Date.now()+5*86400000).toISOString(), condition:'Tormenta', temp_min_celsius:19, temp_max_celsius:27, humidity:80, wind_speed_ms:6 }
-          ]
-        } }
+        // 3) fallback mock or synthetic per-location data
+        if (!data) {
+          if (lat != null && lng != null) {
+            // deterministic pseudo-random generator based on coords so values change by zone
+            const seed = Math.abs(Math.floor((lat * 10000) + (lng * 10000))) % 100000;
+            const rand = (n) => (Math.abs((seed * (n + 1)) % 100) / 100);
+            const tempBase = Math.round((15 + (rand(1) * 20)) * 10) / 10; // 15-35
+            const humidity = Math.round(30 + rand(2) * 70); // 30-100
+            const windMs = Math.round((1 + rand(3) * 8) * 10) / 10; // 1-9 m/s
+            const visibilityKm = Math.round(3 + rand(4) * 12); // 3-15 km
+            const pressureHpa = Math.round(990 + rand(5) * 50); // 990-1040
+            const uvi = Math.min(11, Math.max(0, Math.round(rand(6) * 11)));
+
+            dataSource = 'synthetic';
+            data = {
+              current: {
+                temperature: tempBase,
+                feelsLike: Math.round((tempBase - (rand(7) * 2)) * 10) / 10,
+                humidity,
+                windSpeed: windMs * 3.6, // convert m/s to km/h for normalization
+                visibility: visibilityKm,
+                pressure: pressureHpa,
+                description: ['Soleado', 'Parcialmente nublado', 'Nublado', 'Lluvias aisladas'][Math.floor(rand(8) * 4)] || 'Parcialmente nublado',
+                icon: ['sunny', 'partly-cloudy', 'cloudy', 'rainy'][Math.floor(rand(9) * 4)] || 'partly-cloudy',
+                uvIndex: uvi
+              },
+              short_term_forecast_5_days: Array.from({ length: 5 }).map((_, i) => ({
+                day_name: `día${i + 1}`,
+                date: new Date(Date.now() + (i + 1) * 86400000).toISOString(),
+                condition: i % 4 === 0 ? 'Soleado' : (i % 3 === 0 ? 'Nublado' : (i % 2 === 0 ? 'Lluvias' : 'Parcial')),
+                temp_min_celsius: Math.round((tempBase - 3 + rand(i + 10) * 3) * 10) / 10,
+                temp_max_celsius: Math.round((tempBase + 3 + rand(i + 11) * 3) * 10) / 10,
+                humidity: Math.round(Math.min(100, humidity + rand(i + 12) * 10)),
+                wind_speed_ms: windMs
+              }))
+            };
+          } else {
+            dataSource = 'mock';
+            data = {
+              current: { temperature: 22, feelsLike: 25, humidity: 65, windSpeed: 12, visibility: 10, pressure: 1013, description: 'Parcialmente nublado', icon: 'partly-cloudy', uvIndex: 6 },
+              short_term_forecast_5_days: [
+                { day_name: 'mañana', date: new Date(Date.now() + 1 * 86400000).toISOString(), condition: 'Soleado', temp_min_celsius: 18, temp_max_celsius: 26, humidity: 60, wind_speed_ms: 3 },
+                { day_name: 'día2', date: new Date(Date.now() + 2 * 86400000).toISOString(), condition: 'Lluvia ligera', temp_min_celsius: 16, temp_max_celsius: 24, humidity: 70, wind_speed_ms: 4 },
+                { day_name: 'día3', date: new Date(Date.now() + 3 * 86400000).toISOString(), condition: 'Nublado', temp_min_celsius: 20, temp_max_celsius: 28, humidity: 65, wind_speed_ms: 5 },
+                { day_name: 'día4', date: new Date(Date.now() + 4 * 86400000).toISOString(), condition: 'Soleado', temp_min_celsius: 22, temp_max_celsius: 30, humidity: 50, wind_speed_ms: 3 },
+                { day_name: 'día5', date: new Date(Date.now() + 5 * 86400000).toISOString(), condition: 'Tormenta', temp_min_celsius: 19, temp_max_celsius: 27, humidity: 80, wind_speed_ms: 6 }
+              ]
+            };
+          }
+        }
+
+        // At this point we have 'data' and a local 'dataSource'. Use dataSource for further decisions and then persist to state.
+        if (dataSource) setModelSource(dataSource);
 
         if(aborted) return;
 
@@ -83,7 +140,7 @@ const WeatherInfo = ({ location, onNext }) => {
           const needsVisibility = !(data?.current && typeof data.current.visibility === 'number');
           const needsPressure = !(data?.current && (typeof data.current.pressure === 'number'));
           const needsUvi = !(data?.current && (typeof data.current.uvi === 'number' || typeof data.current.uvIndex === 'number'));
-          if ((modelSource === 'fusion' || needsVisibility || needsPressure || needsUvi) && lat != null && lng != null) {
+          if ((dataSource === 'fusion' || needsVisibility || needsPressure || needsUvi) && lat != null && lng != null) {
             try {
               const supCtrl = new AbortController();
               const supTO = setTimeout(() => supCtrl.abort(), 10000);
@@ -122,13 +179,75 @@ const WeatherInfo = ({ location, onNext }) => {
           return Math.round(w * 10) / 10; // already km/h or large value
         };
 
+        // Helper estimators for missing values
+        const estimateVisibility = (rawCur, data) => {
+          try {
+            // If provider gives explicit visibility, use it
+            if (typeof rawCur.visibility === 'number') return (rawCur.visibility > 1000 ? Math.round(rawCur.visibility / 1000) : Math.round(rawCur.visibility));
+            if (typeof rawCur.visibility_km === 'number') return Math.round(rawCur.visibility_km);
+
+            // Use feels-like temperature as sole driver
+            const t = rawCur.feelsLike ?? rawCur.feels_like ?? rawCur.temperature ?? (data && data.current && (data.current.feelsLike ?? data.current.temp)) ?? null;
+            const temp = (typeof t === 'number') ? t : null;
+            const tMin = 5; const tMax = 45; const visMin = 5; const visMax = 30;
+            if (temp != null) {
+              const clamped = Math.max(tMin, Math.min(tMax, temp));
+              const ratio = (clamped - tMin) / (tMax - tMin); // 0..1
+              const vis = visMin + ratio * (visMax - visMin);
+              return Math.round(Math.max(visMin, Math.min(visMax, vis)));
+            }
+            // If we can't derive a temperature, return a reasonable default so UI shows something
+            return 12;
+          } catch (e) { return null; }
+        };
+
+        const estimatePressure = (rawCur, data) => {
+          try {
+            // If explicit pressure provided by provider, use it
+            if (typeof rawCur.pressure === 'number') return rawCur.pressure;
+            if (typeof rawCur.pressure_hpa === 'number') return rawCur.pressure_hpa;
+            if (typeof rawCur.pressure_kpa === 'number') return Math.round(rawCur.pressure_kpa * 10);
+
+            // Use feels-like temperature as sole driver
+            const t = rawCur.feelsLike ?? rawCur.feels_like ?? rawCur.temperature ?? (data && data.current && (data.current.feelsLike ?? data.current.temp)) ?? null;
+            const temp = (typeof t === 'number') ? t : null;
+            const tMin = 5; const tMax = 45; const pMin = 1005; const pMax = 1030;
+            if (temp != null) {
+              const clamped = Math.max(tMin, Math.min(tMax, temp));
+              const ratio = (clamped - tMin) / (tMax - tMin);
+              const pres = pMin + ratio * (pMax - pMin);
+              return Math.round(Math.max(pMin, Math.min(pMax, pres)));
+            }
+            return 1013;
+          } catch (e) { return 1013; }
+        };
+
+        const estimateUvi = (rawCur, data) => {
+          try {
+            // If provider gives explicit UV, use it
+            const explicit = rawCur.uvIndex ?? rawCur.uvi ?? rawCur.uv ?? (data && data.current && (data.current.uvIndex ?? data.current.uvi));
+            if (typeof explicit === 'number') return explicit;
+
+            // Use feels-like temperature as sole driver, map linearly to 2..7
+            const t = rawCur.feelsLike ?? rawCur.feels_like ?? rawCur.temperature ?? (data && data.current && (data.current.feelsLike ?? data.current.temp)) ?? null;
+            const temp = (typeof t === 'number') ? t : null;
+            const tMin = 5; const tMax = 45; const uvMin = 2; const uvMax = 7;
+            if (temp != null) {
+              const clamped = Math.max(tMin, Math.min(tMax, temp));
+              const ratio = (clamped - tMin) / (tMax - tMin);
+              const uv = uvMin + ratio * (uvMax - uvMin);
+              return Math.round(Math.max(uvMin, Math.min(uvMax, uv)));
+            }
+            return 4;
+          } catch (e) { return null; }
+        };
+
         const normalizedCurrent = {
           temperature: rawCur.temperature ?? rawCur.temp ?? rawCur.temp_c ?? rawCur.temp_celsius ?? null,
           feelsLike: rawCur.feelsLike ?? rawCur.feels_like ?? rawCur.apparent_temperature ?? null,
           humidity: rawCur.humidity ?? rawCur.humidity_percent ?? rawCur.relative_humidity ?? null,
           windSpeed: normalizeWind(rawCur.windSpeed ?? rawCur.wind_speed ?? rawCur.wind_speed_ms ?? rawCur.wind_speed_kmh ?? null),
-          // visibility from various providers may be in meters (e.g. OpenWeather: 10000)
-          // or already in kilometers (e.g. our local proxy maps to km). Handle both robustly:
+          // visibility/pressure/uv may be missing from some providers — compute fallbacks below
           visibility: (typeof rawCur.visibility === 'number')
             ? (rawCur.visibility > 1000 ? Math.round(rawCur.visibility / 1000) : Math.round(rawCur.visibility))
             : (rawCur.visibility_km ?? null),
@@ -137,6 +256,24 @@ const WeatherInfo = ({ location, onNext }) => {
           icon: rawCur.icon ?? rawCur.icon_code ?? null,
           uvIndex: rawCur.uvIndex ?? rawCur.uvi ?? rawCur.uv ?? null
         };
+
+        // If any of the three key metrics are missing, estimate them using heuristics or long-term predictions
+        const finalVisibility = (typeof normalizedCurrent.visibility === 'number') ? normalizedCurrent.visibility : estimateVisibility(rawCur, data);
+        const visibilityEstimated = normalizedCurrent.visibility == null;
+
+        const finalPressure = (typeof normalizedCurrent.pressure === 'number') ? normalizedCurrent.pressure : estimatePressure(rawCur, data);
+        const pressureEstimated = normalizedCurrent.pressure == null;
+
+        const finalUv = (typeof normalizedCurrent.uvIndex === 'number') ? normalizedCurrent.uvIndex : estimateUvi(rawCur, data);
+        const uvEstimated = normalizedCurrent.uvIndex == null;
+
+        // assign final values and estimation flags
+        normalizedCurrent.visibility = finalVisibility;
+        normalizedCurrent.visibilityEstimated = !!visibilityEstimated;
+        normalizedCurrent.pressure = finalPressure;
+        normalizedCurrent.pressureEstimated = !!pressureEstimated;
+        normalizedCurrent.uvIndex = finalUv;
+        normalizedCurrent.uvEstimated = !!uvEstimated;
 
         // Debug: if key fields are missing, log raw source to help diagnose mismatches
         try {
@@ -148,6 +285,16 @@ const WeatherInfo = ({ location, onNext }) => {
             console.warn('WeatherInfo: missing fields after normalization:', missing.join(', '), { raw: rawCur, modelSource, dataSample: data?.current });
           }
         } catch (e) { /* ignore logging errors */ }
+
+        // Diagnostic log: show what will be set so we can trace why visibility might not render
+        try {
+          console.log('WeatherInfo: normalized current ->', {
+            visibility: normalizedCurrent.visibility,
+            visibilityEstimated: normalizedCurrent.visibilityEstimated,
+            feelsLikeRaw: rawCur.feelsLike ?? rawCur.feels_like ?? rawCur.temperature,
+            normalizedFeelsLike: normalizedCurrent.feelsLike
+          });
+        } catch (e) { /* ignore */ }
 
         setWeatherData(normalizedCurrent);
 
@@ -404,9 +551,9 @@ const WeatherInfo = ({ location, onNext }) => {
                 </>
               );
             })()}
-            <div className="detail-item"><FiEye className="detail-icon" /><div><span className="detail-value">{weatherData?.visibility ?? '—'} km</span><span className="detail-label">Visibilidad</span></div></div>
-            <div className="detail-item"><FiThermometer className="detail-icon" /><div><span className="detail-value">{weatherData?.pressure ?? '—'} hPa</span><span className="detail-label">Presión</span></div></div>
-            <div className="detail-item"><FiSun className="detail-icon" /><div><span className="detail-value" style={{color: getUVIndexColor(weatherData?.uvIndex)}}>{weatherData?.uvIndex ?? '—'}</span><span className="detail-label">Índice UV</span></div></div>
+            <div className="detail-item"><FiEye className="detail-icon" /><div><span className="detail-value">{weatherData?.visibility ?? '—'} km{weatherData?.visibilityEstimated ? ' *' : ''}</span><span className="detail-label">Visibilidad{weatherData?.visibilityEstimated ? ' (estimada)' : ''}</span></div></div>
+            <div className="detail-item"><FiThermometer className="detail-icon" /><div><span className="detail-value">{weatherData?.pressure ?? '—'} hPa{weatherData?.pressureEstimated ? ' *' : ''}</span><span className="detail-label">Presión{weatherData?.pressureEstimated ? ' (estimada)' : ''}</span></div></div>
+            <div className="detail-item"><FiSun className="detail-icon" /><div><span className="detail-value" style={{color: getUVIndexColor(weatherData?.uvIndex)}}>{weatherData?.uvIndex ?? '—'}{weatherData?.uvEstimated ? ' *' : ''}</span><span className="detail-label">Índice UV{weatherData?.uvEstimated ? ' (estimado)' : ''}</span></div></div>
           </div>
         </div>
 
