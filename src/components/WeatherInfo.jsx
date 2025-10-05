@@ -7,86 +7,116 @@ import './WeatherInfo.css';
 const WeatherInfo = ({ location, onNext }) => {
   const [weatherData, setWeatherData] = useState(null);
   const [forecast, setForecast] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   // Simular datos de clima (en una app real, usarías una API como OpenWeatherMap)
   useEffect(() => {
+    let aborted = false;
+
     const fetchWeatherData = async () => {
       setLoading(true);
+      setError('');
       try {
-        // Simular delay de API
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Datos simulados del clima
-        const mockWeatherData = {
-          current: {
-            temperature: 22,
-            feelsLike: 25,
-            humidity: 65,
-            windSpeed: 12,
-            visibility: 10,
-            pressure: 1013,
-            description: 'Parcialmente nublado',
-            icon: 'partly-cloudy',
-            uvIndex: 6
-          },
-          forecast: [
-            {
-              date: new Date(Date.now() + 24 * 60 * 60 * 1000),
-              high: 26,
-              low: 18,
-              description: 'Soleado',
-              icon: 'sunny',
-              precipitation: 0
-            },
-            {
-              date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-              high: 24,
-              low: 16,
-              description: 'Lluvia ligera',
-              icon: 'rainy',
-              precipitation: 2
-            },
-            {
-              date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-              high: 28,
-              low: 20,
-              description: 'Nublado',
-              icon: 'cloudy',
-              precipitation: 0
-            },
-            {
-              date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-              high: 30,
-              low: 22,
-              description: 'Soleado',
-              icon: 'sunny',
-              precipitation: 0
-            },
-            {
-              date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-              high: 27,
-              low: 19,
-              description: 'Tormenta',
-              icon: 'stormy',
-              precipitation: 8
+        // Try local proxy first
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+            let lat = location?.lat || location?.latitude || location?.coords?.lat || location?.coords?.latitude;
+            let lng = location?.lng || location?.lon || location?.longitude || location?.coords?.lng || location?.coords?.longitude;
+            // Fallback to last saved location in localStorage
+            if ((lat == null || lng == null) && typeof window !== 'undefined'){
+              try{
+                const raw = localStorage.getItem('clima_last_location_v1');
+                if(raw){
+                  const obj = JSON.parse(raw);
+                  if(obj && typeof obj.latitude === 'number' && typeof obj.longitude === 'number'){
+                    lat = lat ?? obj.latitude;
+                    lng = lng ?? obj.longitude;
+                  }
+                }
+              }catch(e){ /* ignore */ }
             }
-          ]
-        };
-        
-        setWeatherData(mockWeatherData.current);
-        setForecast(mockWeatherData.forecast);
+
+        let data = null;
+        if (lat != null && lng != null) {
+          try {
+            const resp = await fetch(`http://localhost:4003/weather?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`, { signal: controller.signal });
+            clearTimeout(timeout);
+            if (!resp.ok) throw new Error(`Upstream ${resp.status}`);
+            data = await resp.json();
+          } catch (err) {
+            // fallback to mock below
+            console.warn('Failed to fetch local weather proxy, falling back to mock:', err.message || err);
+            data = null;
+          }
+        }
+
+        if (!data) {
+          // Fallback: use the previous mock to keep UI responsive
+          data = {
+            current: {
+              temperature: 22,
+              feelsLike: 25,
+              humidity: 65,
+              windSpeed: 12,
+              visibility: 10,
+              pressure: 1013,
+              description: 'Parcialmente nublado',
+              icon: 'partly-cloudy',
+              uvIndex: 6
+            },
+            forecast: [
+              { date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), high: 26, low: 18, description: 'Soleado', icon: 'sunny', precipitation: 0 },
+              { date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), high: 24, low: 16, description: 'Lluvia ligera', icon: 'rainy', precipitation: 2 },
+              { date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), high: 28, low: 20, description: 'Nublado', icon: 'cloudy', precipitation: 0 },
+              { date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(), high: 30, low: 22, description: 'Soleado', icon: 'sunny', precipitation: 0 },
+              { date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), high: 27, low: 19, description: 'Tormenta', icon: 'stormy', precipitation: 8 }
+            ]
+          };
+        }
+
+        if (aborted) return;
+
+        setWeatherData(data.current ?? null);
+        // Normalize forecast items to ensure date is a Date object and fields exist
+        const rawForecast = Array.isArray(data.forecast) ? data.forecast : (data.short_term_forecast_5_days ? data.short_term_forecast_5_days.map(d => ({ date: d.date, high: d.temp_max_celsius || d.temp_max, low: d.temp_min_celsius || d.temp_min, description: d.condition || d.description, icon: d.icon })) : []);
+        const normalized = (rawForecast || []).map(item => {
+          let dt = item.date;
+          try{ dt = dt ? new Date(dt) : new Date(); }catch(_){ dt = new Date(); }
+          return {
+            date: dt,
+            high: typeof item.high === 'number' ? item.high : null,
+            low: typeof item.low === 'number' ? item.low : null,
+            description: item.description || '',
+            precipitation: item.precipitation || 0,
+            icon: item.icon || null
+          };
+        });
+        setForecast(normalized);
       } catch (err) {
-        setError('Error al cargar datos del clima');
+        if (err.name === 'AbortError') {
+          setError('La petición del clima tardó demasiado y fue cancelada.');
+        } else {
+          console.error('Error fetching weather:', err);
+          setError('Error al cargar datos del clima');
+        }
       } finally {
-        setLoading(false);
+        if (!aborted) setLoading(false);
       }
     };
 
     if (location) {
       fetchWeatherData();
+    } else {
+      // No location -> don't show spinner, clear data
+      setWeatherData(null);
+      setForecast([]);
+      setLoading(false);
     }
+
+    return () => {
+      aborted = true;
+    };
   }, [location]);
 
   const getWeatherIcon = (iconType) => {
@@ -135,7 +165,7 @@ const WeatherInfo = ({ location, onNext }) => {
       <div className="step-header">
         <h1 className="step-title">Información del Clima</h1>
         <p className="step-subtitle">
-          Condiciones actuales y pronóstico para {location?.name}
+          Condiciones actuales y pronóstico para {location?.name || (localStorage.getItem('clima_last_location_v1') ? 'Ubicación guardada' : 'Ubicación no seleccionada')}
         </p>
       </div>
 

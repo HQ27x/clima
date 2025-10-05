@@ -1,0 +1,11 @@
+{
+  "name": "clima-api-proxy",
+  "version": "0.1.0",
+  "description": "Small proxy to OpenWeatherMap that returns a simplified JSON for the Clima app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "clima-mod",
+  "license": "MIT"
+}

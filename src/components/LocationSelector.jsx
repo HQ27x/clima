@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiMapPin, FiSearch, FiNavigation } from 'react-icons/fi';
+import { FiMapPin, FiSearch, FiNavigation, FiCheck } from 'react-icons/fi';
 import './LocationSelector.css';
 
 const DEFAULT_CENTER = { lat: 19.4326, lng: -99.1332 };
@@ -25,6 +25,7 @@ const LocationSelector = ({ onLocationSelect }) => {
   const [sourceText, setSourceText] = useState('—');
   const [userLocation, setUserLocation] = useState(null);
   const [useIframeFallback, setUseIframeFallback] = useState(false);
+  const [savedNotice, setSavedNotice] = useState(false);
 
   function getCurrentPositionAsync(options = {}){
     return new Promise((resolve, reject)=>{
@@ -67,6 +68,19 @@ const LocationSelector = ({ onLocationSelect }) => {
     }catch(e){ console.error('Reverse geocode error', e); return null; }
   }
 
+  function saveLastLocation(obj){
+    try{
+      const toSave = {
+        latitude: typeof obj.latitude === 'number' ? obj.latitude : (obj.lat || obj.latitude),
+        longitude: typeof obj.longitude === 'number' ? obj.longitude : (obj.lng || obj.lon || obj.longitude),
+        accuracy: obj.accuracy ?? obj.acc ?? 0,
+        city: obj.city || obj.name || null,
+        savedAt: new Date().toISOString()
+      };
+      localStorage.setItem('clima_last_location_v1', JSON.stringify(toSave));
+    }catch(e){ console.warn('saveLastLocation failed', e); }
+  }
+
   async function loadGoogleMaps(apiKey){
     if(!apiKey) throw new Error('No API key');
     if(window.google && window.google.maps) return window.google.maps;
@@ -105,11 +119,17 @@ const LocationSelector = ({ onLocationSelect }) => {
           try{
             const lat = e.latLng.lat();
             const lng = e.latLng.lng();
-            setSelectedLocation({ lat, lng, name: `Ubicación seleccionada (${lat.toFixed(4)}, ${lng.toFixed(4)})` });
+            const name = `Ubicación seleccionada (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+            setSelectedLocation({ lat, lng, name });
             setCoordsText(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
             setSourceText('MAP');
             updateMapMarker(lat, lng, 0);
-            reverseGeocode(lat,lng).then(place=> setCityText(place || 'No disponible'));
+            reverseGeocode(lat,lng).then(place=>{
+              const city = place || 'No disponible';
+              setCityText(city);
+              // persist last location
+              saveLastLocation({ latitude: lat, longitude: lng, accuracy: 0, city });
+            });
           }catch(err){ console.warn('map click handler failed', err); }
         });
         listenersRef.current.push(clickListener);
@@ -233,6 +253,16 @@ const LocationSelector = ({ onLocationSelect }) => {
     reverseGeocode(finalLat, finalLon).then(place=>{ setCityText(place || 'No disponible'); });
 
     setSelectedLocation({ lat: finalLat, lng: finalLon, name: 'Ubicación seleccionada' });
+
+    // Persist last good location
+    try{
+      // Try to get place name and then save
+      const place = await reverseGeocode(finalLat, finalLon).catch(()=>null);
+      const city = place || cityText || null;
+      saveLastLocation({ latitude: finalLat, longitude: finalLon, accuracy: finalAcc, city });
+      // ensure cityText updated (reverseGeocode called earlier in code path too)
+      if(place) setCityText(place);
+    }catch(e){ /* ignore */ }
   }
 
   function onLocationError(err){
@@ -332,7 +362,20 @@ const LocationSelector = ({ onLocationSelect }) => {
   };
 
   const confirmLocation = ()=>{
-    if(selectedLocation && onLocationSelect) onLocationSelect(selectedLocation);
+    if(selectedLocation){
+      try{
+        // persist on explicit confirm as well
+        saveLastLocation({ latitude: selectedLocation.lat || selectedLocation.latitude, longitude: selectedLocation.lng || selectedLocation.longitude, accuracy: 0, city: selectedLocation.name || cityText });
+        // show a brief confirmation message
+        setSavedNotice(true);
+        setTimeout(()=>setSavedNotice(false), 3000);
+      }catch(e){ /* ignore */ }
+      if(onLocationSelect) onLocationSelect({
+        lat: selectedLocation.lat || selectedLocation.latitude,
+        lng: selectedLocation.lng || selectedLocation.longitude,
+        name: selectedLocation.name || cityText || `(${(selectedLocation.lat||selectedLocation.latitude).toFixed ? (selectedLocation.lat||selectedLocation.latitude).toFixed(4) : selectedLocation.lat}, ${(selectedLocation.lng||selectedLocation.longitude).toFixed ? (selectedLocation.lng||selectedLocation.longitude).toFixed(4) : selectedLocation.lng})`
+      });
+    }
   };
 
   const toggleWatch = (checked)=>{
@@ -425,6 +468,11 @@ const LocationSelector = ({ onLocationSelect }) => {
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
             <button onClick={confirmLocation} className="btn btn-primary confirm-btn">Confirmar ubicación</button>
+            {savedNotice && (
+              <div className="saved-notice" style={{marginTop:8,background:'#10B981',color:'white',padding:'6px 10px',borderRadius:6,fontSize:13,textAlign:'center'}}>
+                Ubicación guardada
+              </div>
+            )}
           </div>
         </div>
       </div>
