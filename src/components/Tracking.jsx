@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiTarget, FiMapPin, FiClock, FiCheckCircle, FiAlertCircle, FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import { format, addDays, isAfter, isBefore, differenceInDays } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import './Tracking.css';
 
 const Tracking = ({ location, onNext }) => {
@@ -12,21 +12,21 @@ const Tracking = ({ location, onNext }) => {
     totalSteps: 5,
     progress: 20,
     milestones: [
-      { id: 1, title: 'Ubicación seleccionada', completed: true, date: new Date() },
-      { id: 2, title: 'Calendario configurado', completed: true, date: addDays(new Date(), 1) },
-      { id: 3, title: 'Información del clima revisada', completed: true, date: addDays(new Date(), 2) },
-      { id: 4, title: 'Seguimiento iniciado', completed: false, date: addDays(new Date(), 3) },
-      { id: 5, title: 'Meta alcanzada', completed: false, date: addDays(new Date(), 5) }
+      { id: 1, title: 'Location selected', completed: true, date: new Date() },
+      { id: 2, title: 'Calendar configured', completed: true, date: addDays(new Date(), 1) },
+      { id: 3, title: 'Weather info reviewed', completed: true, date: addDays(new Date(), 2) },
+      { id: 4, title: 'Tracking started', completed: false, date: addDays(new Date(), 3) },
+      { id: 5, title: 'Goal reached', completed: false, date: addDays(new Date(), 5) }
     ],
     weatherHistory: [
-      { date: new Date(), temperature: 22, condition: 'Soleado', notes: 'Día perfecto para actividades al aire libre' },
-      { date: addDays(new Date(), -1), temperature: 20, condition: 'Nublado', notes: 'Temperatura agradable, ideal para caminar' },
-      { date: addDays(new Date(), -2), temperature: 18, condition: 'Lluvia ligera', notes: 'Día fresco, perfecto para quedarse en casa' }
+      { date: new Date(), temperature: 22, condition: 'Sunny', notes: 'Perfect day for outdoor activities' },
+      { date: addDays(new Date(), -1), temperature: 20, condition: 'Cloudy', notes: 'Pleasant temperature, great for walking' },
+      { date: addDays(new Date(), -2), temperature: 18, condition: 'Light rain', notes: 'Cool day, good for staying indoors' }
     ],
     goals: [
-      { id: 1, title: 'Monitorear temperatura diaria', target: 5, current: 3, unit: 'días' },
-      { id: 2, title: 'Registrar condiciones climáticas', target: 7, current: 5, unit: 'días' },
-      { id: 3, title: 'Completar seguimiento', target: 1, current: 0, unit: 'veces' }
+      { id: 1, title: 'Monitor daily temperature', target: 5, current: 3, unit: 'days' },
+      { id: 2, title: 'Log weather conditions', target: 7, current: 5, unit: 'days' },
+      { id: 3, title: 'Complete tracking', target: 1, current: 0, unit: 'times' }
     ]
   });
 
@@ -79,9 +79,9 @@ const Tracking = ({ location, onNext }) => {
   return (
     <div className="step-container">
       <div className="step-header">
-        <h1 className="step-title">Seguimiento del Clima</h1>
+        <h1 className="step-title">Weather Tracking</h1>
         <p className="step-subtitle">
-          Monitorea el progreso de tu seguimiento meteorológico
+          Monitor the progress of your weather tracking
         </p>
       </div>
 
@@ -92,7 +92,7 @@ const Tracking = ({ location, onNext }) => {
             <div className="progress-header">
               <h3>
                 <FiTarget className="header-icon" />
-                Progreso General
+                Overall Progress
               </h3>
               <span className="progress-percentage">{trackingData.progress}%</span>
             </div>
@@ -104,11 +104,11 @@ const Tracking = ({ location, onNext }) => {
             </div>
             <div className="progress-details">
               <div className="detail">
-                <span className="label">Días restantes:</span>
-                <span className="value">{daysRemaining} días</span>
+                <span className="label">Days remaining:</span>
+                <span className="value">{daysRemaining} days</span>
               </div>
               <div className="detail">
-                <span className="label">Hitos completados:</span>
+                <span className="label">Milestones completed:</span>
                 <span className="value">
                   {trackingData.milestones.filter(m => m.completed).length} / {trackingData.milestones.length}
                 </span>
@@ -117,9 +117,9 @@ const Tracking = ({ location, onNext }) => {
           </div>
 
           <div className="location-card">
-            <h3>
+              <h3>
               <FiMapPin className="header-icon" />
-              Ubicación de Seguimiento
+              Tracking Location
             </h3>
             <p className="location-name">{location?.name}</p>
             <p className="location-coords">
@@ -130,7 +130,7 @@ const Tracking = ({ location, onNext }) => {
 
         {/* Hitos del seguimiento */}
         <div className="milestones-section">
-          <h3>Hitos del Seguimiento</h3>
+          <h3>Tracking Milestones</h3>
           <div className="milestones-list">
             {trackingData.milestones.map((milestone) => (
               <div
@@ -150,20 +150,20 @@ const Tracking = ({ location, onNext }) => {
                     <h4>{milestone.title}</h4>
                     <p>
                       <FiClock className="icon" />
-                      {format(milestone.date, 'dd/MM/yyyy', { locale: es })}
+                      {format(milestone.date, 'dd/MM/yyyy', { locale: enUS })}
                     </p>
                   </div>
                 </div>
                 <div className="milestone-status">
                   {milestone.completed ? (
-                    <span className="status completed">
+                      <span className="status completed">
                       <FiCheckCircle className="icon" />
-                      Completado
+                      Completed
                     </span>
                   ) : (
                     <span className="status pending">
                       <FiAlertCircle className="icon" />
-                      Pendiente
+                      Pending
                     </span>
                   )}
                 </div>
@@ -174,7 +174,7 @@ const Tracking = ({ location, onNext }) => {
 
         {/* Objetivos */}
         <div className="goals-section">
-          <h3>Objetivos de Seguimiento</h3>
+    <h3>Tracking Goals</h3>
           <div className="goals-grid">
             {trackingData.goals.map((goal) => {
               const progress = Math.round((goal.current / goal.target) * 100);
@@ -194,8 +194,8 @@ const Tracking = ({ location, onNext }) => {
                       style={{ width: `${Math.min(progress, 100)}%` }}
                     ></div>
                   </div>
-                  <div className="goal-percentage">
-                    {progress}% completado
+                    <div className="goal-percentage">
+                    {progress}% completed
                   </div>
                 </div>
               );
@@ -206,13 +206,13 @@ const Tracking = ({ location, onNext }) => {
         {/* Historial del clima */}
         <div className="history-section">
           <div className="history-header">
-            <h3>Historial del Clima</h3>
-            <button
-              onClick={() => setShowAddNote(!showAddNote)}
-              className="btn btn-primary add-note-btn"
-            >
-              Agregar Nota
-            </button>
+            <h3>Weather History</h3>
+              <button
+                onClick={() => setShowAddNote(!showAddNote)}
+                className="btn btn-primary add-note-btn"
+              >
+                Add Note
+              </button>
           </div>
 
           {showAddNote && (
@@ -220,13 +220,13 @@ const Tracking = ({ location, onNext }) => {
               <textarea
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
-                placeholder="Describe las condiciones climáticas observadas..."
+                placeholder="Describe the observed weather conditions..."
                 className="note-textarea"
                 rows="3"
               />
               <div className="form-actions">
                 <button onClick={addNote} className="btn btn-primary">
-                  Agregar Nota
+                  Add Note
                 </button>
                 <button
                   onClick={() => {
@@ -244,8 +244,8 @@ const Tracking = ({ location, onNext }) => {
           <div className="history-list">
             {trackingData.weatherHistory.map((entry, index) => (
               <div key={index} className="history-item">
-                <div className="history-date">
-                  {format(entry.date, 'dd/MM/yyyy', { locale: es })}
+                  <div className="history-date">
+                  {format(entry.date, 'dd/MM/yyyy', { locale: enUS })}
                 </div>
                 <div className="history-weather">
                   <div className="weather-temp">{entry.temperature}°C</div>
@@ -265,7 +265,7 @@ const Tracking = ({ location, onNext }) => {
           onClick={onNext}
           className="btn btn-primary next-btn"
         >
-          Continuar al Feedback
+          Continue to Feedback
         </button>
       </div>
     </div>

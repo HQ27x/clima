@@ -85,12 +85,12 @@ const Feedback = ({ location, onNext }) => {
     if (!ts) return '';
     try {
       // Firestore Timestamp
-      if (typeof ts.toDate === 'function') return new Date(ts.toDate()).toLocaleString('es-ES');
+      if (typeof ts.toDate === 'function') return new Date(ts.toDate()).toLocaleString('en-US');
       // JS Date
-      if (ts instanceof Date) return ts.toLocaleString('es-ES');
+      if (ts instanceof Date) return ts.toLocaleString('en-US');
       // ISO string
       const d = new Date(ts);
-      if (!isNaN(d.getTime())) return d.toLocaleString('es-ES');
+      if (!isNaN(d.getTime())) return d.toLocaleString('en-US');
     } catch (e) {}
     return '';
   };
@@ -102,7 +102,7 @@ const Feedback = ({ location, onNext }) => {
     // require logged-in user
     if (!firebaseUser || !firebaseUser.uid) {
       if (typeof window !== 'undefined') {
-        window.alert('Debes iniciar sesión para enviar feedback. Serás redirigido al inicio de sesión.');
+        window.alert('You must be signed in to submit feedback. You will be redirected to the login page.');
         window.location.replace('/login');
       }
       return;
@@ -126,7 +126,8 @@ const Feedback = ({ location, onNext }) => {
         rating,
         feedback: feedback.trim(),
         // type removed: classification should be done by terceros/moderation
-        location: location?.name || cityName || 'Ubicación no especificada',
+        location: location?.name || cityName || 'Location not specified',
+  location: location?.name || cityName || 'Location not specified',
         city: cityName ?? null,
         coordinates: location ? { lat: location.lat, lng: location.lng } : null,
         userId: firebaseUser.uid,
@@ -144,7 +145,7 @@ const Feedback = ({ location, onNext }) => {
             const diffMs = Date.now() - lastDate.getTime();
             const ONE_DAY_MS = 24 * 60 * 60 * 1000;
             if (diffMs < ONE_DAY_MS) {
-              alert('Solo puedes enviar 1 feedback cada 24 horas. Intenta de nuevo más tarde.');
+              alert('You can only submit 1 feedback every 24 hours. Please try again later.');
               setLoading(false);
               return;
             }
@@ -177,7 +178,7 @@ const Feedback = ({ location, onNext }) => {
               const diffMs = now - lastDate.getTime();
               const ONE_DAY_MS = 24 * 60 * 60 * 1000;
               if (diffMs < ONE_DAY_MS) {
-                alert('Solo puedes enviar 1 feedback cada 24 horas. Intenta de nuevo más tarde.');
+                alert('You can only submit 1 feedback every 24 hours. Please try again later.');
                 setLoading(false);
                 return;
               }
@@ -202,8 +203,8 @@ const Feedback = ({ location, onNext }) => {
       // onSnapshot listener will update recentFeedback automatically
       
     } catch (error) {
-      console.error('Error enviando feedback:', error);
-      alert('Error al enviar feedback. Inténtalo de nuevo.');
+      console.error('Error sending feedback:', error);
+      alert('Error sending feedback. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -242,11 +243,11 @@ const Feedback = ({ location, onNext }) => {
   // Obtener texto de calificación
   const getRatingText = (rating) => {
     const ratings = {
-      1: 'Muy malo',
-      2: 'Malo',
-      3: 'Regular',
-      4: 'Bueno',
-      5: 'Excelente'
+      1: 'Very bad',
+      2: 'Bad',
+      3: 'Average',
+      4: 'Good',
+      5: 'Excellent'
     };
     return ratings[rating] || '';
   };
@@ -259,16 +260,17 @@ const Feedback = ({ location, onNext }) => {
             <FiAward />
           </div>
           <h1 className="success-title">¡Gracias por tu feedback!</h1>
+          <h1 className="success-title">Thanks for your feedback!</h1>
           <p className="success-message">
-            Tu opinión nos ayuda a mejorar la aplicación. 
-            {rating >= 4 && ' ¡Has ganado una estrella por tu colaboración!'}
+            Your feedback helps us improve the app. 
+            {rating >= 4 && ' You have earned a star for your contribution!'}
           </p>
           <div className="success-actions">
             <button
               onClick={() => setSubmitted(false)}
               className="btn btn-outline"
             >
-              Volver
+          Back
             </button>
             {/* 'Ver Foro de Participación' button removed per request */}
           </div>
@@ -280,23 +282,23 @@ const Feedback = ({ location, onNext }) => {
   return (
     <div className="step-container">
       <div className="step-header">
-        <h1 className="step-title">Feedback</h1>
-        <p className="step-subtitle">
-          Comparte tu experiencia y ayuda a mejorar la aplicación
-        </p>
-      </div>
+          <h1 className="step-title">Feedback</h1>
+          <p className="step-subtitle">
+            Share your experience and help improve the app
+          </p>
+        </div>
 
       <div className="feedback-content">
         <div className="feedback-form-section">
           <div className="feedback-card">
             <h3>
               <FiMessageSquare className="header-icon" />
-              {profileName ? `${profileName} evalúa tu experiencia` : 'Evalúa tu experiencia'}
+              {profileName ? `${profileName} rates your experience` : 'Rate your experience'}
             </h3>
             
             <form onSubmit={handleSubmitFeedback} className="feedback-form">
               <div className="rating-section">
-                <label>Calificación general:</label>
+                <label>Overall rating:</label>
                 <div className="stars-container">
                   {renderStars()}
                   {rating > 0 && (
@@ -310,12 +312,12 @@ const Feedback = ({ location, onNext }) => {
               {/* Tipo de feedback removido: la evaluación la realiza otro usuario/moderación */}
 
               <div className="feedback-text-section">
-                <label htmlFor="feedback">Comentarios:</label>
+                <label htmlFor="feedback">Comments:</label>
                 <textarea
                   id="feedback"
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="Comparte tu experiencia, sugerencias o comentarios..."
+                  placeholder="Share your experience, suggestions or comments..."
                   className="feedback-textarea"
                   rows="4"
                   required
@@ -324,7 +326,7 @@ const Feedback = ({ location, onNext }) => {
 
               <div className="location-info">
                 <p>
-                  <strong>Ubicación:</strong> {getCityFromLocationProp(location) || location?.name || 'No especificada'}
+                  <strong>Location:</strong> {getCityFromLocationProp(location) || location?.name || 'Not specified'}
                 </p>
                 {location && (
                   <p>
@@ -338,7 +340,7 @@ const Feedback = ({ location, onNext }) => {
                 disabled={rating === 0 || !feedback.trim() || loading}
                 className="btn btn-primary submit-btn"
               >
-                {loading ? 'Enviando...' : 'Enviar Feedback'}
+                {loading ? 'Sending...' : 'Send Feedback'}
               </button>
             </form>
           </div>
@@ -347,7 +349,7 @@ const Feedback = ({ location, onNext }) => {
         <div className="recent-feedback-section">
           <h3>
             <FiUsers className="header-icon" />
-            Feedback Reciente
+            Recent Feedback
           </h3>
           
           {recentFeedback.length > 0 ? (
@@ -394,8 +396,8 @@ const Feedback = ({ location, onNext }) => {
               ))}
             </div>
           ) : (
-            <div className="no-feedback">
-              <p>No hay feedback reciente disponible</p>
+              <div className="no-feedback">
+              <p>No recent feedback available</p>
             </div>
           )}
         </div>

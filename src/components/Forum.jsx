@@ -70,7 +70,7 @@ const Forum = () => {
           setUserActions({});
         }
       } catch (error) {
-        console.error('Error cargando posts:', error);
+  console.error('Error loading posts:', error);
       }
     };
 
@@ -90,12 +90,12 @@ const Forum = () => {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
-      if (user && user.uid) {
+  if (user && user.uid) {
         try {
           const pDoc = await getDoc(doc(db, 'users', user.uid));
           if (pDoc.exists()) {
             const pd = pDoc.data();
-            setProfileName(pd.displayName || pd.name || user.email || 'Usuario');
+            setProfileName(pd.displayName || pd.name || user.email || 'User');
             setUserStars(pd.stars || 0);
           } else {
             // user exists in Auth but not in Firestore - treat as unregistered for posting
@@ -128,11 +128,11 @@ const Forum = () => {
   // Enviar nuevo post
   const handleSubmitPost = async (e) => {
     e.preventDefault();
-    if (!newPost.trim()) return;
+  if (!newPost.trim()) return;
     // require registered user with profile
-    if (!firebaseUser || !profileName) {
+      if (!firebaseUser || !profileName) {
       if (typeof window !== 'undefined') {
-        window.alert('Debes iniciar sesión con una cuenta registrada para crear posts. Serás redirigido al inicio de sesión.');
+        window.alert('You must sign in with a registered account to create posts. You will be redirected to the login page.');
         window.location.replace('/login');
       }
       return;
@@ -154,7 +154,7 @@ const Forum = () => {
       const tempPost = { id: `temp-${Date.now()}`, ...postData, offline: false };
       setPosts(prev => [tempPost, ...(prev || [])]);
 
-      try{
+  try{
         // wrap the firebase call with a timeout so UI doesn't hang indefinitely
         await promiseWithTimeout(addDoc(collection(db, 'forum_posts'), postData), 8000);
         // on success, reload top posts to get real IDs and timestamps
@@ -168,14 +168,14 @@ const Forum = () => {
         setPosts(postsData);
         setNewPost('');
         setShowNewPost(false);
-      }catch(firebaseErr){
+        }catch(firebaseErr){
         // If sending to Firebase fails, show an error but do NOT persist posts locally
         console.error('Firebase error while posting:', firebaseErr);
-        alert('No se pudo publicar en el servidor. Inténtalo de nuevo.');
+        alert('Could not publish to server. Please try again.');
       }
     } catch (error) {
-      console.error('Error enviando post (outer):', error);
-      alert('Error al enviar post. Inténtalo de nuevo.');
+      console.error('Error sending post (outer):', error);
+      alert('Error sending post. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -185,7 +185,7 @@ const Forum = () => {
   const handleAction = async (post, type) => {
     if (!post || !type) return;
     if (!firebaseUser || !firebaseUser.uid || !profileName) {
-      window.alert('Debes iniciar sesión para realizar esta acción.');
+      window.alert('You must be signed in to perform this action.');
       window.location.replace('/login');
       return;
     }
@@ -197,12 +197,12 @@ const Forum = () => {
     }
     const actionRef = doc(db, 'forum_posts', post.id, 'actions', uid);
     const postRef = doc(db, 'forum_posts', post.id);
-    try{
+  try{
       await runTransaction(db, async (tx) => {
         const actionSnap = await tx.get(actionRef);
-        if (actionSnap.exists()) throw new Error('Ya realizaste una acción en este post');
-        const postSnap = await tx.get(postRef);
-        if (!postSnap.exists()) throw new Error('Post no encontrado');
+  if (actionSnap.exists()) throw new Error('You have already performed an action on this post');
+  const postSnap = await tx.get(postRef);
+  if (!postSnap.exists()) throw new Error('Post not found');
         // increment post counter
         if (type === 'like') {
           tx.update(postRef, { likes: increment(1) });
@@ -231,17 +231,17 @@ const Forum = () => {
       }catch(_){ }
     }catch(err){
       console.error('Action error', err);
-      if(err.message && err.message.includes('Ya realizaste')) alert('Ya realizaste una acción en este post'); else alert('No se pudo realizar la acción');
+      if(err.message && err.message.includes('already performed')) alert('You have already performed an action on this post'); else alert('Could not perform the action');
     }
   };
 
   // Obtener nivel de credibilidad basado en estrellas (rangos solicitados)
   const getCredibilityLevel = (stars) => {
     const s = Number(stars || 0);
-    if (s >= 201) return { level: 'Experto', color: '#8B5CF6' };
-    if (s >= 101) return { level: 'Avanzado', color: '#10B981' };
-    if (s >= 51) return { level: 'Intermedio', color: '#F59E0B' };
-    return { level: 'Principiante', color: '#6B7280' };
+    if (s >= 201) return { level: 'Expert', color: '#8B5CF6' };
+    if (s >= 101) return { level: 'Advanced', color: '#10B981' };
+    if (s >= 51) return { level: 'Intermediate', color: '#F59E0B' };
+    return { level: 'Beginner', color: '#6B7280' };
   };
 
   const credibility = getCredibilityLevel(userStars);
@@ -321,10 +321,10 @@ const Forum = () => {
     try{
       if(!ts) return '';
       if(typeof ts === 'object' && typeof ts.toDate === 'function'){
-        return ts.toDate().toLocaleDateString('es-ES');
-      }
-      const d = (typeof ts === 'string' || typeof ts === 'number') ? new Date(ts) : (ts instanceof Date ? ts : null);
-      if(d) return d.toLocaleDateString('es-ES');
+          return ts.toDate().toLocaleDateString('en-US');
+        }
+        const d = (typeof ts === 'string' || typeof ts === 'number') ? new Date(ts) : (ts instanceof Date ? ts : null);
+        if(d) return d.toLocaleDateString('en-US');
       return '';
     }catch(e){ return ''; }
   }
@@ -418,9 +418,9 @@ const Forum = () => {
   return (
     <div className="step-container">
       <div className="step-header">
-        <h1 className="step-title">Foro de Participación</h1>
+        <h1 className="step-title">Community Forum</h1>
         <p className="step-subtitle">
-          Comparte experiencias, consejos y conecta con otros usuarios
+          Share experiences, tips, and connect with other users
         </p>
       </div>
 
@@ -441,7 +441,7 @@ const Forum = () => {
               <div className="user-stars">
                 <FiStar className="star-icon" />
                 <span className="star-count">{userStars}</span>
-                <span className="star-label">estrellas</span>
+                <span className="star-label">Stars</span>
               </div>
               <div className="user-level" style={{ color: credibility.color }}>
                 {credibility.level}
@@ -466,7 +466,7 @@ const Forum = () => {
               className="btn btn-primary new-post-btn"
             >
               <FiMessageCircle className="btn-icon" />
-              Nuevo Post
+              New Post
             </button>
           </div>
         </div>
@@ -501,12 +501,12 @@ const Forum = () => {
         {/* Formulario de nuevo post */}
         {showNewPost && (
           <div className="new-post-form">
-            <h3>Crear nuevo post</h3>
+              <h3>Create new post</h3>
             <form onSubmit={handleSubmitPost}>
               <textarea
                 value={newPost}
                 onChange={(e) => setNewPost(e.target.value)}
-                placeholder="Comparte tu experiencia meteorológica, consejos o preguntas..."
+                placeholder="Share your weather experience, tips, or questions..."
                 className="post-textarea"
                 rows="4"
                 required
@@ -517,7 +517,7 @@ const Forum = () => {
                   disabled={!newPost.trim() || loading}
                   className="btn btn-primary"
                 >
-                  {loading ? 'Publicando...' : 'Publicar'}
+                  {loading ? 'Posting...' : 'Post'}
                 </button>
                 <button
                   type="button"
@@ -527,7 +527,7 @@ const Forum = () => {
                   }}
                   className="btn btn-outline"
                 >
-                  Cancelar
+                  Cancel
                 </button>
               </div>
             </form>
@@ -538,7 +538,7 @@ const Forum = () => {
         <div className="posts-section">
           <h3>
             <FiMessageCircle className="section-icon" />
-            Discusiones Recientes
+            Recent Discussions
           </h3>
           
           {posts.length > 0 ? (
@@ -556,7 +556,7 @@ const Forum = () => {
                         <div className="author-info">
                           <div className="author-name">{post.author}</div>
                           <div style={{display:'flex',alignItems:'center',gap:8}}>
-                            <div className="author-post-count">{post.authorPostCount || 0} foros</div>
+                              <div className="author-post-count">{post.authorPostCount || 0} posts</div>
                             <div className="author-level" style={{ color: postCredibility.color }}>
                               {postCredibility.level}
                             </div>
@@ -573,7 +573,7 @@ const Forum = () => {
                           {formatTimestamp(post.timestamp)}
                         </div>
                           <div className="post-comments-count">
-                            {typeof post.commentCount === 'number' ? `${post.commentCount} comentarios` : ''}
+                            {typeof post.commentCount === 'number' ? `${post.commentCount} comments` : ''}
                           </div>
                       </div>
                     </div>
@@ -601,39 +601,39 @@ const Forum = () => {
                       </button>
                       <button className="action-btn flag-btn">
                         <FiFlag className="action-icon" />
-                        Reportar
+                        Report
                       </button>
                       <button
                         onClick={() => openThread(post)}
                         className="action-btn thread-btn"
                       >
-                        Abrir hilo
+                        Open thread
                       </button>
                     </div>
                     {/* Thread view */}
                     {openPost && openPost.id === post.id && (
                       <div className="thread-section">
                         <div className="thread-header">
-                          <strong>Hilo: {post.content.substring(0, 80)}</strong>
-                          <button onClick={closeThread} className="btn btn-outline">Cerrar hilo</button>
+                          <strong>Thread: {post.content.substring(0, 80)}</strong>
+                          <button onClick={closeThread} className="btn btn-outline">Close thread</button>
                         </div>
                         <div className="thread-comments">
                           {commentsLoading ? <div>Cargando comentarios...</div> : (
                             threadComments.length ? (
                               threadComments.map(c => (
                                 <div key={c.id} className="thread-comment">
-                                  <div className="comment-author"><strong>{c.author}</strong> · <span className="comment-date">{formatTimestamp(c.timestamp)}</span></div>
-                                  <div className="comment-body">{c.body}</div>
+                                    <div className="comment-author"><strong>{c.author}</strong> · <span className="comment-date">{formatTimestamp(c.timestamp)}</span></div>
+                                    <div className="comment-body">{c.body}</div>
                                 </div>
                               ))
-                            ) : <div>No hay comentarios aún</div>
+                            ) : <div>No comments yet</div>
                           )}
                         </div>
                         <form className="comment-form" onSubmit={handleSubmitComment}>
-                          <textarea value={newComment} onChange={(e)=>setNewComment(e.target.value)} placeholder="Escribe un comentario..." rows={2} required />
+                          <textarea value={newComment} onChange={(e)=>setNewComment(e.target.value)} placeholder="Write a comment..." rows={2} required />
                           <div style={{display:'flex',gap:8,marginTop:8}}>
-                            <button type="submit" className="btn btn-primary">Comentar</button>
-                            <button type="button" onClick={closeThread} className="btn btn-outline">Cancelar</button>
+                            <button type="submit" className="btn btn-primary">Comment</button>
+                            <button type="button" onClick={closeThread} className="btn btn-outline">Cancel</button>
                           </div>
                         </form>
                       </div>
@@ -645,8 +645,8 @@ const Forum = () => {
           ) : (
             <div className="no-posts">
               <FiMessageCircle className="no-posts-icon" />
-              <p>No hay posts disponibles</p>
-              <p>¡Sé el primero en compartir algo!</p>
+              <p>No posts available</p>
+              <p>Be the first to share something!</p>
             </div>
           )}
         </div>
@@ -657,21 +657,21 @@ const Forum = () => {
             <FiUsers className="stat-icon" />
             <div>
               <div className="stat-number">{activeUsersCount === null ? '—' : activeUsersCount.toLocaleString()}</div>
-              <div className="stat-label">Usuarios activos</div>
+              <div className="stat-label">User Online</div>
             </div>
           </div>
           <div className="stat-item">
             <FiMessageCircle className="stat-icon" />
             <div>
               <div className="stat-number">{posts.length}</div>
-              <div className="stat-label">Posts publicados</div>
+              <div className="stat-label">Published Posts</div>
             </div>
           </div>
           <div className="stat-item">
             <FiAward className="stat-icon" />
             <div>
               <div className="stat-number">{verifiedExpertsCount === null ? '—' : verifiedExpertsCount.toLocaleString()}</div>
-              <div className="stat-label">Expertos verificados</div>
+              <div className="stat-label">Verified Experts</div>
             </div>
           </div>
         </div>

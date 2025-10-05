@@ -18,7 +18,7 @@ const LocationSelector = ({ onLocationSelect }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [statusText, setStatusText] = useState('Preparando…');
+  const [statusText, setStatusText] = useState('Preparing…');
   const [coordsText, setCoordsText] = useState('—');
   const [cityText, setCityText] = useState('—');
   const [accuracyText, setAccuracyText] = useState('—');
@@ -98,7 +98,7 @@ const LocationSelector = ({ onLocationSelect }) => {
   async function initMap(){
     try{
       const key = window.GOOGLE_MAPS_API_KEY || process.env.REACT_APP_GOOGLE_MAPS_API_KEY || null;
-      if(!key){ setStatusText('Google Maps: API key no encontrada. Añádela en window.GOOGLE_MAPS_API_KEY o REACT_APP_GOOGLE_MAPS_API_KEY'); return; }
+  if(!key){ setStatusText('Google Maps: API key not found. Add it to window.GOOGLE_MAPS_API_KEY or REACT_APP_GOOGLE_MAPS_API_KEY'); return; }
       await loadGoogleMaps(key);
       if(mapContainerRef.current){
         mapInstance.current = new window.google.maps.Map(mapContainerRef.current, { center: DEFAULT_CENTER, zoom: 12,
@@ -119,7 +119,7 @@ const LocationSelector = ({ onLocationSelect }) => {
           try{
             const lat = e.latLng.lat();
             const lng = e.latLng.lng();
-            const name = `Ubicación seleccionada (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+            const name = `Selected location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
             setSelectedLocation({ lat, lng, name });
             setCoordsText(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
             setSourceText('MAP');
@@ -193,7 +193,7 @@ const LocationSelector = ({ onLocationSelect }) => {
       }
     }catch(e){
       console.error('Failed to init Google Maps', e);
-      setStatusText('No se pudo inicializar Google Maps. Revisa la consola. Usando fallback embebido.');
+      setStatusText('Google Maps could not be initialized. Check the console. Using embedded fallback');
       setUseIframeFallback(true);
     }
   }
@@ -243,10 +243,10 @@ const LocationSelector = ({ onLocationSelect }) => {
     const finalLon = position.coords.longitude;
     const finalAcc = position.coords.accuracy;
 
-    setCoordsText(`${finalLat.toFixed(6)}, ${finalLon.toFixed(6)}`);
-    setAccuracyText(finalAcc ? `${Math.round(finalAcc)} m` : '—');
-    setSourceText((source || 'gps').toUpperCase());
-    setStatusText('Ubicación obtenida');
+  setCoordsText(`${finalLat.toFixed(6)}, ${finalLon.toFixed(6)}`);
+  setAccuracyText(finalAcc ? `${Math.round(finalAcc)} m` : '—');
+  setSourceText((source || 'gps').toUpperCase());
+  setStatusText('Location obtained');
 
     updateMapMarker(finalLat, finalLon, Math.max(finalAcc || 0, displayMin || 0));
 
@@ -267,14 +267,14 @@ const LocationSelector = ({ onLocationSelect }) => {
 
   function onLocationError(err){
     console.warn('Geolocation error', err);
-    if(err && err.code === 1) setStatusText('Permiso denegado. Activa la ubicación y vuelve a intentar.');
-    else if(err && err.code === 2) setStatusText('Posición no disponible.');
-    else if(err && err.code === 3) setStatusText('Tiempo de espera agotado.');
-    else setStatusText('Error al obtener ubicación: '+(err && err.message ? err.message : JSON.stringify(err)));
+  if(err && err.code === 1) setStatusText('Permission denied. Enable location and try again.');
+  else if(err && err.code === 2) setStatusText('Position unavailable.');
+  else if(err && err.code === 3) setStatusText('Timed out.');
+  else setStatusText('Error obtaining location: '+(err && err.message ? err.message : JSON.stringify(err)));
   }
 
   async function askLocation(){
-    setStatusText('Preparando solicitud de ubicación…');
+  setStatusText('Preparing location request…');
     const isLocalhost = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1');
     const isSecure = window.isSecureContext;
     if(!isSecure && !isLocalhost){
@@ -291,18 +291,18 @@ const LocationSelector = ({ onLocationSelect }) => {
           catch(e){ onLocationError(e); }
           return;
         } else if(p.state === 'prompt'){
-          setStatusText('El navegador pedirá permiso de ubicación. Por favor acepta.');
+          setStatusText('The browser will ask for location permission. Please allow it.');
           try{ const pos = await getCurrentPositionAsync({ enableHighAccuracy:true, timeout:20000, maximumAge:0 }); onLocationSuccess(pos,'gps',1000); }
           catch(e){ onLocationError(e); }
           return;
         } else if(p.state === 'denied'){
-          setStatusText('Permiso de ubicación denegado previamente. Habilítalo en la configuración del sitio.');
+          setStatusText('Location permission previously denied. Enable it in site settings.');
           return;
         }
       }
     }catch(e){ console.warn('Permissions API unavailable', e); }
 
-    setStatusText('Solicitando ubicación…');
+  setStatusText('Requesting location…');
     try{
       const pos = await getCurrentPositionAsync({ enableHighAccuracy:true, timeout:8000, maximumAge:0 });
       onLocationSuccess(pos,'gps',1000);
@@ -325,25 +325,25 @@ const LocationSelector = ({ onLocationSelect }) => {
       const lat = parseFloat(d.latitude);
       const lon = parseFloat(d.longitude);
       if(!lat || !lon) throw new Error('No coords from IP');
-      setStatusText('Ubicación por IP estimada');
+  setStatusText('IP-based location estimated');
       await onLocationSuccess({ coords: { latitude: lat, longitude: lon, accuracy: d.latitude ? 50000 : 0 } }, 'ip', displayMin);
-    }catch(e){ setStatusText('No se pudo obtener ubicación por IP'); }
+  }catch(e){ setStatusText('Could not obtain IP-based location'); }
   }
 
   async function manualSearch(q, displayMin = 0){
-    if(!q) return setStatusText('Ingresa un término de búsqueda');
-    setStatusText(`Buscando "${q}"...`);
+  if(!q) return setStatusText('Enter a search term');
+  setStatusText(`Searching "${q}"...`);
     try{
       const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=1&accept-language=es`;
       const res = await fetch(url);
       if(!res.ok) throw new Error('Search error');
       const arr = await res.json();
-      if(!arr || !arr.length) return setStatusText('No se encontraron resultados');
+  if(!arr || !arr.length) return setStatusText('No results found');
       const it = arr[0];
       const lat = parseFloat(it.lat);
       const lon = parseFloat(it.lon);
       await onLocationSuccess({ coords: { latitude: lat, longitude: lon, accuracy: 1000 } }, 'manual', displayMin);
-    }catch(e){ setStatusText('Error en búsqueda'); console.error(e); }
+  }catch(e){ setStatusText('Search error'); console.error(e); }
   }
 
   const handleSearch = async ()=>{
@@ -411,29 +411,29 @@ const LocationSelector = ({ onLocationSelect }) => {
   return (
     <div className="step-container">
       <div className="step-header">
-        <h1 className="step-title">Selecciona tu ubicación</h1>
-        <p className="step-subtitle">Busca o usa tu ubicación para centrar el mapa.</p>
+      <h1 className="step-title">Select your location</h1>
+    <p className="step-subtitle">Search or use your location to center the map.</p>
       </div>
 
       <div className="location-selector">
         <div className="search-section">
           <div className="search-bar">
             <FiSearch className="search-icon" />
-            <input
+              <input
               type="text"
               value={searchQuery}
               onChange={(e)=>setSearchQuery(e.target.value)}
-              placeholder="Buscar ciudad, dirección..."
+              placeholder="Search city, address..."
               className="search-input"
               onKeyPress={(e)=> e.key === 'Enter' && handleSearch() }
             />
-            <button onClick={handleSearch} disabled={isLoading} className="btn search-btn">{isLoading ? 'Buscando...' : 'Buscar'}</button>
+            <button onClick={handleSearch} disabled={isLoading} className="btn search-btn">{isLoading ? 'Searching...' : 'Search'}</button>
           </div>
 
-          <button onClick={useCurrentLocation} className="btn btn-outline location-btn"><FiNavigation className="btn-icon" /> Usar mi ubicación</button>
+          <button onClick={useCurrentLocation} className="btn btn-outline location-btn"><FiNavigation className="btn-icon" /> Use my location</button>
 
           <label style={{display:'flex',alignItems:'center',gap:8}}>
-            <input type="checkbox" id="watchPos" onChange={(e)=>toggleWatch(e.target.checked)} /> <span className="muted">Seguir ubicación</span>
+            <input type="checkbox" id="watchPos" onChange={(e)=>toggleWatch(e.target.checked)} /> <span className="muted">Follow location</span>
           </label>
         </div>
 
@@ -457,24 +457,24 @@ const LocationSelector = ({ onLocationSelect }) => {
             <div style={{display:'flex',alignItems:'center',gap:12}}>
               <FiMapPin className="location-icon" />
               <div>
-                <h3 style={{margin:0}}>{selectedLocation?.name || 'Ubicación seleccionada'}</h3>
+                <h3 style={{margin:0}}>{selectedLocation?.name || 'Selected location'}</h3>
                 <p style={{margin:0,color:'#9CA3AF'}}>{coordsText}</p>
               </div>
             </div>
             <div style={{marginTop:12}}>
-              <div className="field"><strong>Ciudad / Lugar:</strong> <span>{cityText}</span></div>
-              <div className="field"><strong>Fuente:</strong> <span>{sourceText}</span></div>
-              <div className="field"><strong>Precisión (m):</strong> <span>{accuracyText}</span></div>
-              <div className="field"><strong>Estado:</strong> <span>{statusText}</span></div>
+              <div className="field"><strong>City / Place:</strong> <span>{cityText}</span></div>
+              <div className="field"><strong>Source:</strong> <span>{sourceText}</span></div>
+              <div className="field"><strong>Accuracy (m):</strong> <span>{accuracyText}</span></div>
+              <div className="field"><strong>Status:</strong> <span>{statusText}</span></div>
             </div>
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            <button onClick={confirmLocation} className="btn btn-primary confirm-btn">Confirmar ubicación</button>
+            <button onClick={confirmLocation} className="btn btn-primary confirm-btn">Confirm location</button>
             {savedNotice && (
-              <div className="alert-modal">
-    <FiCheck style={{marginRight:8, fontSize:20}} />
-    Ubicación guardada
-  </div>
+              <div className="saved-notice" style={{marginTop:8,background:'#10B981',color:'white',padding:'6px 10px',borderRadius:6,fontSize:13,textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                <FiCheck style={{fontSize:16}} />
+                <span>Location saved</span>
+              </div>
             )}
           </div>
         </div>

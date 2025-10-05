@@ -9,11 +9,11 @@ const BottomNav = () => {
   if (isLogin) return null;
 
   const steps = [
-    { path: '/', icon: FiMapPin, label: 'Ubicación' },
-    { path: '/calendar', icon: FiCalendar, label: 'Calendario' },
-    { path: '/weather', icon: FiCloud, label: 'Clima' },
+    { path: '/', icon: FiMapPin, label: 'Location' },
+    { path: '/calendar', icon: FiCalendar, label: 'Calendar' },
+    { path: '/weather', icon: FiCloud, label: 'Weather' },
     { path: '/feedback', icon: FiMessageSquare, label: 'Feedback' },
-    { path: '/forum', icon: FiUsers, label: 'Foro' }
+    { path: '/forum', icon: FiUsers, label: 'Forum' }
   ];
 
   return (
