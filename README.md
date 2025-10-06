@@ -1,4 +1,4 @@
-# Clima App - Aplicación Meteorológica Interactiva
+# Clima App - Alertify
 
 Una aplicación web moderna para el seguimiento del clima con funcionalidades de ubicación, calendario, feedback y foro de participación.
 
